@@ -13,7 +13,18 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+        ]);
+
+        $middleware->web(append: [
             HandleInertiaRequests::class,
+        ]);
+
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\IsAdmin::class,
+            'professor.approved' => \App\Http\Middleware\IsProfessorApproved::class,
+            'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class, // Exemplo de outro middleware
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
