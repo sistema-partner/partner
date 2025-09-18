@@ -102,7 +102,6 @@ export default function Register() {
                         className="mt-2"
                     />
                 </div>
-
                 <div className="mt-4">
                     <InputLabel htmlFor="role" value="Eu sou..." />
 
@@ -110,16 +109,22 @@ export default function Register() {
                         id="role"
                         name="role"
                         value={data.role}
-                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                         onChange={(e) => setData('role', e.target.value)}
+                        className="
+                            mt-1 block w-full 
+                            rounded-md shadow-sm
+                            border border-border
+                            bg-background text-foreground
+                            focus:border-primary focus:ring focus:ring-primary/50
+                        "
                     >
                         <option value="aluno">Aluno</option>
                         <option value="professor">Professor</option>
-                        {/* Futuramente, você pode adicionar outros aqui */}
                     </select>
 
                     <InputError message={errors.role} className="mt-2" />
                 </div>
+
 
                 <div className="mt-4 flex items-center justify-end">
                     <Link
