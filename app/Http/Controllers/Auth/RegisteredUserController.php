@@ -35,35 +35,21 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'string', Rule::in(['aluno', 'professor'])],
+            'role' => ['required', 'string', Rule::in(['student', 'teacher', 'researcher'])],
+
         ]);
 
-    if ($request->role === 'aluno') {
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'aluno',
-            'status' => 'approved',
+            'role' => $request->role,
+            'status' => $request->role === 'teacher' || $request->role === 'researcher' ? 'pending' : 'approved',
         ]);
 
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
-
-    } elseif ($request->role === 'professor') {
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'professor',
-            'status' => 'pending',
-        ]);
-
-        return redirect(route('login'))->with('status', 'Cadastro de professor recebido! Aguarde a aprovação de um administrador.');
-    }
+        if($user['role'] == 'teacher' || $user['role'] == 'researcher') {
+            return redirect(route('login'))->with('status', 'Cadastro recebido! Aguarde a aprovação de um administrador.');
+        }
 
         return redirect(route('login'));
     }

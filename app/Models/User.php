@@ -2,49 +2,67 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-        'status',
+        'name', 'email', 'password', 'role', 'status', 
+        'avatar', 'phone', 'bio', 'institution'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password', 'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    // Relações
+    public function taughtCourses()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Course::class, 'teacher_id');
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class, 'student_id');
+    }
+
+    public function approvedCourses()
+    {
+        return $this->hasMany(Enrollment::class, 'approved_by');
+    }
+
+    // Scopes
+    public function scopeTeachers($query)
+    {
+        return $query->where('role', 'teacher')->where('status', 'approved');
+    }
+
+    public function scopeStudents($query)
+    {
+        return $query->where('role', 'student')->where('status', 'approved');
+    }
+
+    // Helpers
+    public function isTeacher()
+    {
+        return $this->role === 'teacher' && $this->status === 'approved';
+    }
+
+    public function isStudent()
+    {
+        return $this->role === 'student' && $this->status === 'approved';
+    }
+
+    public function isResearcher()
+    {
+        return $this->role === 'researcher' && $this->status === 'approved';
     }
 }

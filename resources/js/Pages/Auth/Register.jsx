@@ -118,8 +118,9 @@ export default function Register() {
                             focus:border-primary focus:ring focus:ring-primary/50
                         "
                     >
-                        <option value="aluno">Aluno</option>
-                        <option value="professor">Professor</option>
+                        <option value="student">Aluno</option>
+                        <option value="teacher">Professor</option>
+                        <option value="researcher">Pesquisador</option>
                     </select>
 
                     <InputError message={errors.role} className="mt-2" />
