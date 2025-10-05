@@ -13,7 +13,7 @@ return new class extends Migration
 {
     Schema::table('users', function (Blueprint $table) {
         // 'pending', 'approved', 'rejected'
-        $table->string('status')->default('approved');
+        $table->string('status')->default('pending');
     });
 }
 

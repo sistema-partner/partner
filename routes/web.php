@@ -15,6 +15,14 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/professor', function() {
+    return Inertia::render('Teacher/Dashboard');
+})->middleware(['auth', 'professor.approved']);
+
+Route::get('/pending-approval', function() {
+    return Inertia::render('Auth/PendingApproval');
+})->middleware(['auth'])->name('pending-approval');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -30,8 +38,6 @@ Route::get('/admin/approvals', [AdminController::class, 'index'])->middleware('a
 Route::patch('/admin/approve/{user}', [AdminController::class, 'approve'])->middleware(['auth', 'admin'])->name('admin.approve');
 Route::delete('/admin/reject/{user}', [AdminController::class, 'reject'])->middleware(['auth', 'admin'])->name('admin.reject');
 
-Route::get('/professor/dashboard', function() {
-    // ...
-})->middleware(['auth', 'professor.approved']);
+
 
 require __DIR__.'/auth.php';

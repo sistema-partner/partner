@@ -2,9 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
 use Illuminate\Http\Request;
+use Closure;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
+use function in_array;
 
 class IsProfessorApproved
 {
@@ -13,11 +15,19 @@ class IsProfessorApproved
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, \Closure $next): Response
         {
-            if (auth()->check() && auth()->user()->role === 'professor' && auth()->user()->status === 'approved') {
-                return $next($request);
+            if (!Auth::check()) {
+                return redirect()->route('login');
             }
-            return redirect()->route('login')->withErrors(['email' => 'Sua conta de professor não foi aprovada ou está desativada.']);
+
+            $user = Auth::user();
+
+            // Se for professor ou pesquisador e NÃO aprovado, redireciona
+            if (($user->role === 'teacher' || $user->role === 'researcher') && $user->status !== 'approved') {
+                return redirect()->route('pending-approval');
+            }
+
+            return $next($request);
         }
 }
