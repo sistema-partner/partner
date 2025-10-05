@@ -11,7 +11,7 @@ export default function Register() {
         email: '',
         password: '',
         password_confirmation: '',
-        role: 'aluno',
+        role: 'student  ',
     });
 
     const submit = (e) => {

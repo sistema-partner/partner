@@ -10,7 +10,7 @@ class AdminController extends Controller
 {
     public function index()
         {
-            $pendingTeachers = User::where('role', 'professor')
+            $pendingTeachers = User::where('role', 'teacher')
                                 ->where('status', 'pending')
                                 ->get();
 
