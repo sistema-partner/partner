@@ -23,7 +23,18 @@ Route::get('/pending-approval', function() {
 // Rotas protegidas
 Route::middleware(['auth', 'verified', 'professor.approved'])->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
+        return Inertia::render('Dashboard', [
+            'user' => auth()->user(),
+            'enrolled_courses' => auth()->user()->enrolledCourses ?? [],
+            'pending_enrollments' => auth()->user()->pendingEnrollments ?? [],
+            'taught_courses' => auth()->user()->taughtCourses ?? [],
+            'pending_approvals' => auth()->user()->pendingApprovals ?? [],
+            'research_groups' => auth()->user()->researchGroups ?? [],
+            'analytics' => auth()->user()->analytics ?? [],
+            'pending_approvals_count' => auth()->user()->pendingApprovalsCount ?? 0,
+            'total_users' => auth()->user()->totalUsers ?? 0,
+            'recent_users' => auth()->user()->recentUsers ?? [],
+        ]);
     })->name('dashboard');
 
     Route::get('/professor', function() {

@@ -17,16 +17,18 @@ class IsProfessorApproved
 
         $user = Auth::user();
 
-        // Permite acesso a estudantes
-        if ($user->role === 'student') {
+        // Permite acesso se estiver em modo "ver como aluno"
+        if (session('viewing_as_student')) {
             return $next($request);
         }
 
-        // Se for professor/pesquisador e NÃO aprovado, redireciona
+        // Lógica normal de aprovação
         if (in_array($user->role, ['teacher', 'researcher']) && $user->status !== 'approved') {
             return redirect()->route('pending-approval');
         }
 
         return $next($request);
     }
+
+
 }
