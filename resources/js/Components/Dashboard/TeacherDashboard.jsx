@@ -1,3 +1,7 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, Link } from '@inertiajs/react';
+import { PlusCircle } from 'lucide-react';
+
 export default function TeacherDashboard({ taughtCourses, pendingApprovals, isViewingAsStudent }) {
     if (isViewingAsStudent) {
         return (
@@ -47,6 +51,23 @@ export default function TeacherDashboard({ taughtCourses, pendingApprovals, isVi
                                 <div className="flex gap-4 mt-2 text-sm text-gray-500">
                                     <span>Alunos: {course.active_enrollments_count}</span>
                                     <span>Status: {course.status}</span>
+                                </div>
+                                 <div className="flex items-center justify-end gap-2">
+                                    <Link href={route('courses.show', course.id)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                        Ver
+                                    </Link>
+                                    <Link href={route('courses.edit', course.id)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                        Editar
+                                    </Link>
+                                    <Link
+                                        href={route('courses.destroy', course.id)}
+                                        method="delete"
+                                        as="button"
+                                        className="text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400"
+                                        onBefore={() => confirm('Tem certeza que deseja excluir este curso?')}
+                                    >
+                                        Excluir
+                                    </Link>
                                 </div>
                             </div>
                         ))}

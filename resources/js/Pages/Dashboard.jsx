@@ -4,14 +4,14 @@ import StudentDashboard from '@/Components/Dashboard/StudentDashboard';
 import TeacherDashboard from '@/Components/Dashboard/TeacherDashboard';
 import ResearcherDashboard from '@/Components/Dashboard/ResearcherDashboard';
 import AdminDashboard from '@/Components/Dashboard/AdminDashboard';
+import { PlusCircle } from 'lucide-react';
 
 export default function Dashboard() {
     const { props } = usePage();
-    const { user, enrolled_courses, pending_enrollments, taught_courses, pending_approvals, research_groups, analytics, pending_approvals_count, total_users, recent_users } = props;
-    
+    const { auth, enrolled_courses, pending_enrollments, taught_courses, pending_approvals, research_groups, analytics, pending_approvals_count, total_users, recent_users } = usePage().props;
+    const { user } = auth;
     const renderDashboardContent = () => {
         const effectiveRole = user.role;
-        
         switch (effectiveRole) {
             case 'student':
                 return (
@@ -54,7 +54,7 @@ export default function Dashboard() {
     console.log(user)
     
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout user={auth.user}>
             <Head title="Dashboard" />
             
             <div className="py-6">
@@ -82,8 +82,15 @@ export default function Dashboard() {
                                     </div>
                                 )}
                             </div>
-                            
-                            {/* Botão "Ver como aluno" para professores */}
+                            {user.role === 'student' && (
+                                <Link
+                                    href={route('courses.explore')}
+                                    className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                >
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Explorar Cursos
+                                </Link>
+                            )}
                             {user.can_view_as_student && (
                                 <Link
                                     href={route('view-as-student')}
@@ -92,6 +99,15 @@ export default function Dashboard() {
                                     className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                 >
                                     👁️ Ver como aluno
+                                </Link>
+                            )}
+                            {user.role === 'teacher' && (
+                                <Link
+                                    href={route('courses.create')}
+                                    as="button"
+                                    className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                >
+                                    Criar Curso
                                 </Link>
                             )}
                         </div>
