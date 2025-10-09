@@ -67,4 +67,9 @@ class Course extends Model
                ($this->max_students === null || 
                 $this->activeEnrollments()->count() < $this->max_students);
     }
+
+    public function contents()
+    {
+        return $this->hasMany(CourseContent::class)->latest(); 
+    }
 }

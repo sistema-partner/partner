@@ -229,7 +229,7 @@ function CourseCard({ course, type }) {
             case 'active':
                 return (
                     <Link
-                        href={route('courses.show', { course: course.id })}
+                        href={route('courses.details', { course: course.id })}
                         className="w-full bg-blue-600 text-white py-2 px-4 rounded text-center hover:bg-blue-700 transition-colors"
                     >
                         Acessar Curso
@@ -247,7 +247,7 @@ function CourseCard({ course, type }) {
             case 'ended':
                 return (
                     <Link
-                        href={route('courses.show', { course: course.id })}
+                        href={route('courses.details', { course: course.id })}
                         className="w-full bg-gray-600 text-white py-2 px-4 rounded text-center hover:bg-gray-700 transition-colors"
                     >
                         Ver Conteúdo

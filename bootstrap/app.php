@@ -25,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\IsAdmin::class,
             'professor.approved' => \App\Http\Middleware\IsProfessorApproved::class,
             'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class, // Exemplo de outro middleware
+
+            'teacher' => \App\Http\Middleware\IsTeacher::class, 
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
