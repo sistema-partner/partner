@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import AppHeader from '@/Components/AppHeader';
+import AppFooter from '@/Components/AppFooter';
 
 export default function AuthenticatedLayout({ header, children }) {
     const { auth } = usePage().props;
@@ -23,14 +24,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 {children}
             </main>
 
-            {/* Footer opcional */}
-            <footer className="border-t border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm mt-auto">
-                <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-                    <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-                        Partner - Plataforma Educacional Inteligente • UFAL {new Date().getFullYear()}
-                    </div>
-                </div>
-            </footer>
+            <AppFooter />
         </div>
     );
 }
