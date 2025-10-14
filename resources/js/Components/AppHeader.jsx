@@ -24,7 +24,7 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
   const isAuth = variant === 'auth' && !!user;
 
   return (
-    <header className="border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+  <header className="relative z-30 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -49,7 +49,7 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
                     {user.is_viewing_as_student ? (
                       <>
                         <Eye className="h-4 w-4" />
-                        <span>Visão: Aluno</span>
+                        <span>Visão: Estudante</span>
                       </>
                     ) : (
                       <>

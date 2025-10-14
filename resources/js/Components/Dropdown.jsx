@@ -1,35 +1,83 @@
 import { Transition } from '@headlessui/react';
 import { Link } from '@inertiajs/react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useRef, useEffect } from 'react';
 
 const DropDownContext = createContext();
 
 const Dropdown = ({ children }) => {
     const [open, setOpen] = useState(false);
+    const containerRef = useRef(null);
+    const triggerRef = useRef(null);
+    const contentRef = useRef(null);
+    const previousFocus = useRef(null);
 
     const toggleOpen = () => {
-        setOpen((previousState) => !previousState);
+        setOpen(prev => {
+            const next = !prev;
+            if (next) {
+                previousFocus.current = document.activeElement;
+            }
+            return next;
+        });
     };
 
+    // Click outside & ESC
+    useEffect(() => {
+        if (!open) return;
+
+        const handlePointer = (e) => {
+            if (!containerRef.current) return;
+            if (containerRef.current.contains(e.target)) return; // inside
+            setOpen(false);
+        };
+        const handleKey = (e) => {
+            if (e.key === 'Escape') {
+                setOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handlePointer, true);
+        document.addEventListener('touchstart', handlePointer, true);
+        document.addEventListener('keydown', handleKey, true);
+        return () => {
+            document.removeEventListener('mousedown', handlePointer, true);
+            document.removeEventListener('touchstart', handlePointer, true);
+            document.removeEventListener('keydown', handleKey, true);
+        };
+    }, [open]);
+
+    // Focus management when opening
+    useEffect(() => {
+        if (open && contentRef.current) {
+            // focus first focusable element or content container
+            const focusable = contentRef.current.querySelector(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            (focusable || contentRef.current).focus();
+        } else if (!open && previousFocus.current) {
+            try { previousFocus.current.focus(); } catch {}
+        }
+    }, [open]);
+
     return (
-        <DropDownContext.Provider value={{ open, setOpen, toggleOpen }}>
-            <div className="relative">{children}</div>
+        <DropDownContext.Provider value={{ open, setOpen, toggleOpen, triggerRef, contentRef }}>
+            <div ref={containerRef} className="relative">
+                {children}
+            </div>
         </DropDownContext.Provider>
     );
 };
 
 const Trigger = ({ children }) => {
-    const { open, setOpen, toggleOpen } = useContext(DropDownContext);
+    const { open, setOpen, toggleOpen, triggerRef } = useContext(DropDownContext);
 
     return (
         <>
-            <div onClick={toggleOpen}>{children}</div>
-
+            <div ref={triggerRef} onClick={toggleOpen}>{children}</div>
             {open && (
                 <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-40 cursor-default"
                     onClick={() => setOpen(false)}
-                ></div>
+                />
             )}
         </>
     );
@@ -41,7 +89,7 @@ const Content = ({
     contentClasses = 'py-1 bg-white',
     children,
 }) => {
-    const { open, setOpen } = useContext(DropDownContext);
+    const { open, setOpen, contentRef } = useContext(DropDownContext);
 
     let alignmentClasses = 'origin-top';
 
@@ -70,13 +118,13 @@ const Content = ({
             >
                 <div
                     className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
-                    onClick={() => setOpen(false)}
+                    ref={contentRef}
+                    role="menu"
+                    tabIndex={-1}
+                    onClick={(e) => e.stopPropagation()}
                 >
                     <div
-                        className={
-                            `rounded-md ring-1 ring-black ring-opacity-5 ` +
-                            contentClasses
-                        }
+                        className={`rounded-md ring-1 ring-black ring-opacity-5 focus:outline-none ${contentClasses}`}
                     >
                         {children}
                     </div>

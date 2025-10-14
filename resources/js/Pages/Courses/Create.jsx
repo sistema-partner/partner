@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import GlassCard from '@/Components/GlassCard';
 import { Head, useForm, Link } from '@inertiajs/react';
 
 export default function Create({ auth }) {
@@ -18,18 +19,21 @@ export default function Create({ auth }) {
     };
 
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-            header={<h2 className="font-semibold text-xl text-foreground leading-tight">Criar Novo Curso</h2>}
-        >
+        <AuthenticatedLayout user={auth.user}>
             <Head title="Criar Curso" />
 
-            <div className="py-12">
+            <div className="py-6">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-card p-6 shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit}>
+                    {/* Header da página */}
+                    <div className="mb-6">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Criar Novo Curso</h1>
+                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Defina as informações básicas do curso. Você poderá editar depois.</p>
+                    </div>
+
+                    <GlassCard>
+                        <form onSubmit={submit} className="space-y-6">
                             {/* Título do Curso */}
-                            <div>
+                            <div className="space-y-1">
                                 <InputLabel htmlFor="title" value="Título do Curso" />
                                 <TextInput
                                     id="title"
@@ -45,13 +49,13 @@ export default function Create({ auth }) {
                             </div>
 
                             {/* Descrição */}
-                            <div className="mt-4">
+                            <div className="space-y-1">
                                 <InputLabel htmlFor="description" value="Descrição" />
                                 <textarea
                                     id="description"
                                     name="description"
                                     value={data.description}
-                                    className="mt-1 block w-full border-border bg-background rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     rows="4"
                                     onChange={(e) => setData('description', e.target.value)}
                                 ></textarea>
@@ -59,7 +63,7 @@ export default function Create({ auth }) {
                             </div>
 
                             {/* Datas */}
-                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <InputLabel htmlFor="start_date" value="Data de Início" />
                                     <TextInput
@@ -89,8 +93,8 @@ export default function Create({ auth }) {
                             </div>
 
                             {/* Botões de Ação */}
-                            <div className="flex items-center justify-end mt-6">
-                                <Link href={route('dashboard')} className="text-sm text-muted-foreground hover:text-foreground mr-4">
+                            <div className="flex items-center justify-end pt-2">
+                                <Link href={route('dashboard')} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mr-4 transition-colors">
                                     Cancelar
                                 </Link>
                                 <PrimaryButton disabled={processing}>
@@ -98,7 +102,7 @@ export default function Create({ auth }) {
                                 </PrimaryButton>
                             </div>
                         </form>
-                    </div>
+                    </GlassCard>
                 </div>
             </div>
         </AuthenticatedLayout>
