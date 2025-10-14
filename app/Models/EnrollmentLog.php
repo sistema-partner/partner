@@ -9,11 +9,15 @@ class EnrollmentLog extends Model
 {
     use HasFactory;
 
+    protected $table = 'enrollments_logs';
+
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'enrollment_id',
         'action',
         'performed_by',
-        'reason'
+        'reason',
     ];
 
     protected $casts = [

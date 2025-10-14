@@ -36,7 +36,6 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'string', Rule::in(['student', 'teacher', 'researcher'])],
-
         ]);
 
         $user = User::create([
@@ -47,10 +46,16 @@ class RegisteredUserController extends Controller
             'status' => $request->role === 'teacher' || $request->role === 'researcher' ? 'pending' : 'approved',
         ]);
 
-        if($user['role'] == 'teacher' || $user['role'] == 'researcher') {
-            return redirect(route('login'))->with('status', 'Cadastro recebido! Aguarde a aprovação de um administrador.');
+        // 🔥 IMPORTANTE: Disparar o evento Registered para TODOS os usuários
+        event(new Registered($user));
+
+        // Se for estudante, faz login automaticamente
+        if ($user->role === 'student') {
+            Auth::login($user);
+            return redirect(route('dashboard'))->with('status', 'Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.');
         }
 
-        return redirect(route('login'));
+        // Se for professor/pesquisador, redireciona para login
+        return redirect(route('login'))->with('status', 'Cadastro recebido! Aguarde a aprovação de um administrador e verifique seu email para confirmar sua conta.');
     }
 }
