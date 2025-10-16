@@ -10,18 +10,15 @@ class EnrollmentLog extends Model
     use HasFactory;
 
     protected $table = 'enrollments_logs';
+    // A tabela possui apenas created_at gerenciado manualmente pela migration
+    public $timestamps = false;
 
-    public const UPDATED_AT = null;
-
+    // Colunas reais da tabela enrollments_logs
     protected $fillable = [
         'enrollment_id',
         'action',
         'performed_by',
         'reason',
-    ];
-
-    protected $casts = [
-        'created_at' => 'datetime',
     ];
 
     // Relações
@@ -67,7 +64,6 @@ class EnrollmentLog extends Model
         return $this->action === 'requested';
     }
 
-    // Método para texto amigável da ação
     public function getActionTextAttribute()
     {
         $actions = [
@@ -78,5 +74,20 @@ class EnrollmentLog extends Model
         ];
 
         return $actions[$this->action] ?? $this->action;
+    }
+
+    public function student()
+    {
+        return $this->belongsTo(User::class, 'student_id');
+    }
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

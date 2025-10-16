@@ -54,7 +54,6 @@ class Course extends Model
         return $query->where('accepts_enrollments', true);
     }
 
-    // Helpers
     public function isActive()
     {
         return $this->status === 'active';
@@ -71,5 +70,17 @@ class Course extends Model
     public function contents()
     {
         return $this->hasMany(CourseContent::class)->latest(); 
+    }
+    
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'enrollments', 'course_id', 'student_id')
+            ->withPivot('status', 'approved_at')
+            ->withTimestamps();
+    }
+    
+    public function approvedStudents()
+    {
+        return $this->students()->wherePivot('status', 'approved');
     }
 }

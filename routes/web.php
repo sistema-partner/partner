@@ -9,8 +9,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\Enrollment;
-use App\Http\Controllers\Course\ContentController;
 use App\Http\Controllers\CourseContentController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -22,7 +22,7 @@ Route::get('/', function () {
 });
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $props = [];
@@ -82,6 +82,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/approvals', [AdminController::class, 'index'])->name('approvals');
     Route::patch('/approve/{user}', [AdminController::class, 'approve'])->name('approve');
     Route::delete('/reject/{user}', [AdminController::class, 'reject'])->name('reject');
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 });
 
 require __DIR__.'/auth.php';
