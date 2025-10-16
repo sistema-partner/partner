@@ -16,7 +16,7 @@ class EnrollmentRequestNotification extends Notification // 👈 REMOVA "impleme
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail']; // 👈 REMOVA 'mail' temporariamente
+        return ['database']; // 👈 REMOVA 'mail' temporariamente
     }
 
     public function toDatabase(object $notifiable): array
