@@ -36,7 +36,6 @@ class EnrollmentRequestNotification extends Notification // 👈 REMOVA "impleme
     }
 
     public function toArray(object $notifiable): array
-    {
-        return $this->toDatabase($notifiable);
+    { return $this->toDatabase($notifiable);
     }
 }
