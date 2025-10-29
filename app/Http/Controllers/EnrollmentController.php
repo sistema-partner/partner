@@ -6,7 +6,7 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use App\Notifications\EnrollmentRequestNotification;
 use App\Models\EnrollmentLog;
 
 class EnrollmentController extends Controller
@@ -36,12 +36,26 @@ class EnrollmentController extends Controller
             'status' => 'pending',
             'requested_at' => now(),
         ]);
-        
+            
         EnrollmentLog::create([
             'enrollment_id' => $enrollment->id,
             'action' => 'requested',
             'performed_by' => $request->user()->id,
         ]);
+
+        // 🔔 VERIFIQUE SE ESTÁ CHEGANDO AQUI
+        \Log::info('Tentando enviar notificação para o professor', [
+            'teacher_id' => $course->teacher->id,
+            'teacher_name' => $course->teacher->name,
+            'enrollment_id' => $enrollment->id
+        ]);
+
+        try {
+            $course->teacher->notify(new \App\Notifications\EnrollmentRequestNotification($enrollment));
+            \Log::info('Notificação enviada com sucesso');
+        } catch (\Exception $e) {
+            \Log::error('Erro ao enviar notificação: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Solicitação de matrícula enviada com sucesso!');
     }

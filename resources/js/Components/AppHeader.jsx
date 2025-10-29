@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Link, router } from '@inertiajs/react';
 import ThemeToggler from '@/Components/ThemeToggler';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Users, Eye, GraduationCap, BookOpen, BarChart3 } from 'lucide-react';
+import { Users, Eye, GraduationCap, BookOpen, BarChart3, Bell, CheckCircle } from 'lucide-react';
 
 /**
  * AppHeader
@@ -12,9 +12,180 @@ import { Users, Eye, GraduationCap, BookOpen, BarChart3 } from 'lucide-react';
  *  - user: usuário autenticado ou null
  *  - variant: 'public' | 'auth'
  *  - showRoleSwitcher: bool (default true)
+ *  - initialNotifications: array de notificações (opcional)
+ *  - initialUnreadCount: número de não lidas (opcional)
  */
-export default function AppHeader({ user, variant = 'public', showRoleSwitcher = true }) {
+export default function AppHeader({ 
+  user, 
+  variant = 'public', 
+  showRoleSwitcher = true,
+  initialNotifications = [],
+  initialUnreadCount = 0 
+}) {
   const [openMobile, setOpenMobile] = useState(false);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Buscar notificações via Inertia
+  const fetchNotifications = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch('/notifications', {
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data)
+        setNotifications(data.notifications);
+        setUnreadCount(data.unread_count);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar notificações:', error);
+    }
+  };
+
+  // Polling para novas notificações
+  useEffect(() => {
+    if (!user) return;
+    
+    fetchNotifications();
+    
+    const interval = setInterval(fetchNotifications, 30000); // 30 segundos
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Marcar como lida
+  const markAsRead = async (notificationId) => {
+    try {
+      const response = await fetch(`/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        // Atualizar estado local
+        setNotifications(prev => prev.map(notif => 
+          notif.id === notificationId ? { ...notif, read: true } : notif
+        ));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Erro ao marcar como lida:', error);
+    }
+  };
+
+  // Marcar todas como lidas
+  const markAllAsRead = async () => {
+    if (unreadCount === 0) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        // Atualizar estado local
+        setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('Erro ao marcar todas como lidas:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Componente de item de notificação
+  const NotificationItem = ({ notification }) => {
+    const handleClick = () => {
+      if (!notification.read) {
+        markAsRead(notification.id);
+      }
+      
+      // Fechar dropdown
+      setIsNotificationsOpen(false);
+      
+      // Navegar para URL da notificação se existir
+      if (notification.data?.url) {
+        window.location.href = notification.data.url;
+      }
+    };
+
+    const getNotificationIcon = (type) => {
+      const icons = {
+        enrollment_approved: '🎉',
+        enrollment_request: '📥',
+        course_start: '🚀',
+        course_end: '📚',
+        student_enrolled_code: '👨‍🎓',
+      };
+      return icons[type] || '🔔';
+    };
+
+    const formatTime = (dateString) => {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Agora';
+      if (diffMins < 60) return `${diffMins}m atrás`;
+      if (diffHours < 24) return `${diffHours}h atrás`;
+      if (diffDays < 7) return `${diffDays}d atrás`;
+      
+      return date.toLocaleDateString('pt-BR');
+    };
+
+    return (
+      <div 
+        className={`p-3 border-b cursor-pointer transition-colors ${
+          notification.read ? 'bg-white' : 'bg-blue-50 dark:bg-blue-900/20'
+        } hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600`}
+        onClick={handleClick}
+      >
+        <div className="flex gap-3">
+          <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-lg">
+            {getNotificationIcon(notification.type)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className={`text-sm font-medium ${
+              notification.read ? 'text-gray-900 dark:text-gray-100' : 'text-gray-900 dark:text-gray-100 font-semibold'
+            }`}>
+              {notification.title}
+            </h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+              {notification.message}
+            </p>
+            <span className="text-xs text-gray-400 dark:text-gray-500 mt-2 block">
+              {formatTime(notification.created_at)}
+            </span>
+          </div>
+          {!notification.read && (
+            <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2" />
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const getRoleLabel = (role) => {
     const labels = { student: 'Estudante', teacher: 'Professor', researcher: 'Pesquisador', admin: 'Administrador' };
@@ -24,7 +195,7 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
   const isAuth = variant === 'auth' && !!user;
 
   return (
-  <header className="relative z-30 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+    <header className="relative z-30 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -34,7 +205,7 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
           </div>
 
           {/* Desktop navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             {isAuth ? (
               <>
                 <NavLink
@@ -44,6 +215,72 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
                 >
                   Dashboard
                 </NavLink>
+                
+                {/* 🔔 COMPONENTE DE NOTIFICAÇÕES */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                    className="relative p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-medium">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Dropdown de Notificações */}
+                  {isNotificationsOpen && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-96 overflow-hidden">
+                      {/* Header */}
+                      <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-600">
+                        <h3 className="font-semibold text-gray-900 dark:text-white">Notificações</h3>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            disabled={isLoading}
+                            className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50"
+                          >
+                            <CheckCircle className="h-3 w-3" />
+                            {isLoading ? 'Processando...' : 'Marcar todas'}
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Lista de Notificações */}
+                      <div className="overflow-y-auto max-h-80">
+                        {notifications.length > 0 ? (
+                          notifications.map(notification => (
+                            <NotificationItem 
+                              key={notification.id} 
+                              notification={notification}
+                            />
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                            <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Nenhuma notificação</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Footer */}
+                      {notifications.length > 0 && (
+                        <div className="p-2 border-t border-gray-200 dark:border-gray-600">
+                          <Link 
+                            href="/notifications" 
+                            className="block text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 py-1"
+                            onClick={() => setIsNotificationsOpen(false)}
+                          >
+                            Ver todas as notificações
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {showRoleSwitcher && (
                   <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm">
                     {user.is_viewing_as_student ? (
@@ -62,7 +299,8 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
                   </div>
                 )}
                 <ThemeToggler />
-                {/* Dropdown */}
+                
+                {/* Dropdown do usuário */}
                 <div className="relative">
                   <Dropdown>
                     <Dropdown.Trigger>
@@ -116,7 +354,7 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
                 </div>
               </>
             ) : (
-              // Public variant: se usuário já estiver autenticado, mostrar apenas Dashboard
+              // ... resto do código público permanece igual
               user ? (
                 <Link
                   href={route('dashboard')}
@@ -145,7 +383,23 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
 
           {/* Mobile buttons */}
           <div className="flex items-center gap-2 md:hidden">
-            {isAuth && <ThemeToggler />}
+            {isAuth && (
+              <>
+                {/* Sininho mobile */}
+                <button
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className="relative p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center font-medium">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                <ThemeToggler />
+              </>
+            )}
             <button
               onClick={() => setOpenMobile(!openMobile)}
               className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
@@ -189,6 +443,14 @@ export default function AppHeader({ user, variant = 'public', showRoleSwitcher =
           </div>
         )}
       </div>
+
+      {/* Overlay para fechar notificações ao clicar fora */}
+      {isNotificationsOpen && (
+        <div 
+          className="fixed inset-0 z-20" 
+          onClick={() => setIsNotificationsOpen(false)}
+        />
+      )}
     </header>
   );
 }
