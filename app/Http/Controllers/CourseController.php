@@ -41,7 +41,7 @@ class CourseController extends Controller
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'start_date' => ['required','date','after_or_equal:today'],
+            'start_date' => ['required', 'date', 'after_or_equal:today'],
             'end_date' => 'required|date|after_or_equal:start_date',
             'image' => 'nullable|image|max:2048',
             'cover' => 'nullable|image|max:4096',
@@ -125,7 +125,7 @@ class CourseController extends Controller
             'title' => 'required|string|max:255',
             'code' => ['required', 'string', 'max:20', Rule::unique('courses')->ignore($course->id)],
             'description' => 'nullable|string',
-            'start_date' => ['required','date','after_or_equal:today'],
+            'start_date' => ['required', 'date', 'after_or_equal:today'],
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => ['required', Rule::in(['active', 'planned', 'ended', 'cancelled'])],
             'image' => 'nullable|image|max:2048',

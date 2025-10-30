@@ -126,11 +126,18 @@ export default function StudentDashboard({
 
             {/* Cursos Ativos */}
             <GlassCard className="p-0" padding="sm">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-4">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                         <BookOpen className="h-5 w-5 mr-2 text-green-500" />
                         Meus Cursos Ativos
                     </h2>
+                    <button
+                        type="button"
+                        onClick={() => setShowCodeModal(true)}
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
+                    >
+                        INSERIR CÓDIGO DE CURSO
+                    </button>
                 </div>
                 <div className="p-6">
                     {enrolledCourses.filter(

@@ -78,8 +78,9 @@ class Course extends Model
 
     public function canEnroll()
     {
+        // Permite matrícula se curso aceita matrículas e está ativo ou planejado
         return $this->accepts_enrollments &&
-            $this->isActive() &&
+            in_array($this->status, ['active', 'planned']) &&
             ($this->max_students === null ||
                 $this->activeEnrollments()->count() < $this->max_students);
     }

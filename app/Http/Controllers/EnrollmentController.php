@@ -26,7 +26,7 @@ class EnrollmentController extends Controller
         }
 
         if (!$course->canEnroll()) {
-            return back()->with('error', 'Este curso não está aceitando matrículas.');
+            return back()->with('error', 'Este curso não está aceitando matrículas (status inválido ou limite atingido).');
         }
 
         $existing = Enrollment::where('student_id', $request->user()->id)
@@ -48,12 +48,11 @@ class EnrollmentController extends Controller
             'approved_by' => $course->teacher_id
         ]);
 
-        dd($enrollment);
-
         EnrollmentLog::create([
             'enrollment_id' => $enrollment->id,
-            'action' => 'approved_via_code',
+            'action' => 'approved', // usar ação existente na enum
             'performed_by' => $request->user()->id,
+            'reason' => 'via_code'
         ]);
 
         return back()->with('success', 'Matrícula realizada com sucesso através do código!');
@@ -65,7 +64,7 @@ class EnrollmentController extends Controller
         }
 
         if (!$course->canEnroll()) {
-            return back()->with('error', 'Este curso não está aceitando matrículas no momento.');
+            return back()->with('error', 'Este curso não está aceitando matrículas (status inválido ou limite atingido).');
         }
 
         $existingEnrollment = Enrollment::where('student_id', $request->user()->id)

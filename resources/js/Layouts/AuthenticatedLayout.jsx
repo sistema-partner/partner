@@ -1,6 +1,7 @@
-import { usePage } from '@inertiajs/react';
-import AppHeader from '@/Components/AppHeader';
-import AppFooter from '@/Components/AppFooter';
+import { usePage } from "@inertiajs/react";
+import AppHeader from "@/Components/AppHeader";
+import AppFooter from "@/Components/AppFooter";
+import ToastProvider from "@/Components/ToastProvider";
 
 export default function AuthenticatedLayout({ header, children }) {
     const { auth } = usePage().props;
@@ -20,11 +21,10 @@ export default function AuthenticatedLayout({ header, children }) {
             )}
 
             {/* Conteúdo principal */}
-            <main className="flex-1">
-                {children}
-            </main>
+            <main className="flex-1">{children}</main>
 
             <AppFooter />
+            <ToastProvider />
         </div>
     );
 }
