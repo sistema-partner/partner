@@ -144,7 +144,12 @@ class CourseController extends Controller
         $user = auth()->user();
 
         if ($course->teacher_id === $user->id) {
-            $course->load(['enrollments.student', 'contents.author']);
+            // Carrega matrículas, avisos (contents) e agora módulos com seus conteúdos
+            $course->load([
+                'enrollments.student',
+                'contents.author', // avisos (CourseContent)
+                'modules.contents.user' // módulos e conteúdos reutilizáveis/não-anúncios
+            ]);
             return Inertia::render('Courses/Show', [
                 'course' => $course,
             ]);
@@ -156,7 +161,11 @@ class CourseController extends Controller
             ->exists();
 
         if ($isEnrolledAndApproved) {
-            $course->load(['teacher', 'contents.author']);
+            $course->load([
+                'teacher',
+                'contents.author',
+                'modules.contents.user'
+            ]);
 
             return Inertia::render('Courses/PublicShow', [
                 'course' => $course,
