@@ -7,6 +7,7 @@ export default function ImageUpload({
     label,
     name,
     value,
+    existingUrl = null, // URL já existente no servidor (não enviada para o backend como arquivo)
     onChange,
     error,
     helper = null,
@@ -16,16 +17,20 @@ export default function ImageUpload({
     const inputRef = useRef(null);
 
     useEffect(() => {
+        // Se usuário selecionou novo arquivo
         if (value instanceof File) {
             const objectUrl = URL.createObjectURL(value);
             setPreview(objectUrl);
             return () => URL.revokeObjectURL(objectUrl);
-        } else if (typeof value === "string" && value) {
-            setPreview(value);
-        } else {
-            setPreview(null);
         }
-    }, [value]);
+        // Se não há novo arquivo, mas existe URL anterior
+        if (!value && existingUrl) {
+            setPreview(existingUrl);
+            return;
+        }
+        // Caso contrário limpa preview
+        setPreview(null);
+    }, [value, existingUrl]);
 
     const handleFiles = (files) => {
         if (!files || !files.length) return;
@@ -47,6 +52,7 @@ export default function ImageUpload({
 
     const clearImage = () => {
         onChange(null);
+        // Mantém existingUrl? Decidimos limpar preview completamente.
         setPreview(null);
         if (inputRef.current) inputRef.current.value = "";
     };

@@ -20,8 +20,8 @@ export default function Edit({ auth, course }) {
         start_date: formatDate(course.start_date),
         end_date: formatDate(course.end_date),
         status: course.status || "",
-        image: course.image_url || null,
-        cover: course.cover_url || null,
+        image: null, // novo arquivo apenas
+        cover: null, // novo arquivo apenas
         remove_image: false,
         remove_cover: false,
     });
@@ -53,6 +53,7 @@ export default function Edit({ auth, course }) {
                                         label="Imagem do Curso"
                                         name="image"
                                         value={data.image}
+                                        existingUrl={course.image_url}
                                         onChange={(file) => {
                                             setData("image", file);
                                             setData("remove_image", false);
@@ -60,28 +61,24 @@ export default function Edit({ auth, course }) {
                                         error={errors.image}
                                         helper="Miniatura usada em listagens."
                                     />
-                                    {data.image &&
-                                        !(data.image instanceof File) && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setData(
-                                                        "remove_image",
-                                                        true
-                                                    );
-                                                    setData("image", null);
-                                                }}
-                                                className="text-xs text-red-600 hover:text-red-700"
-                                            >
-                                                Remover imagem atual
-                                            </button>
-                                        )}
+                                    {course.image_url && !data.image && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setData("remove_image", true);
+                                            }}
+                                            className="text-xs text-red-600 hover:text-red-700"
+                                        >
+                                            Remover imagem atual
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <ImageUpload
                                         label="Imagem de Capa"
                                         name="cover"
                                         value={data.cover}
+                                        existingUrl={course.cover_url}
                                         onChange={(file) => {
                                             setData("cover", file);
                                             setData("remove_cover", false);
@@ -89,22 +86,17 @@ export default function Edit({ auth, course }) {
                                         error={errors.cover}
                                         helper="Exibida como banner da página."
                                     />
-                                    {data.cover &&
-                                        !(data.cover instanceof File) && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setData(
-                                                        "remove_cover",
-                                                        true
-                                                    );
-                                                    setData("cover", null);
-                                                }}
-                                                className="text-xs text-red-600 hover:text-red-700"
-                                            >
-                                                Remover capa atual
-                                            </button>
-                                        )}
+                                    {course.cover_url && !data.cover && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setData("remove_cover", true);
+                                            }}
+                                            className="text-xs text-red-600 hover:text-red-700"
+                                        >
+                                            Remover capa atual
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             <div>
