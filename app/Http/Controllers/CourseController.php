@@ -16,7 +16,7 @@ class CourseController extends Controller
      */
     public function index()
     {
-       $courses = auth()->user()->taughtCourses()->latest()->get();
+        $courses = auth()->user()->taughtCourses()->latest()->get();
 
         // Renderiza o componente React 'Courses/Index.jsx'
         // e passa a lista de cursos como uma "prop" chamada 'courses'.
@@ -43,13 +43,23 @@ class CourseController extends Controller
             'description' => 'nullable|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'image' => 'nullable|image|max:2048',
+            'cover' => 'nullable|image|max:4096',
         ]);
 
         do {
             $code = Str::upper(Str::random(6));
-        } while (Course::where('code', $code)->exists()); 
+        } while (Course::where('code', $code)->exists());
 
         $validatedData['code'] = $code;
+
+        // Uploads
+        if ($request->hasFile('image')) {
+            $validatedData['image_path'] = $request->file('image')->store('courses/images', 'public');
+        }
+        if ($request->hasFile('cover')) {
+            $validatedData['cover_path'] = $request->file('cover')->store('courses/covers', 'public');
+        }
 
         $request->user()->taughtCourses()->create($validatedData);
 
@@ -70,10 +80,10 @@ class CourseController extends Controller
         }
 
         $isEnrolledAndApproved = $user->enrollments()
-                                      ->where('course_id', $course->id)
-                                      ->where('status', 'approved')
-                                      ->exists();
-        
+            ->where('course_id', $course->id)
+            ->where('status', 'approved')
+            ->exists();
+
         if ($isEnrolledAndApproved) {
             $course->load(['teacher', 'contents.author']);
 
@@ -116,7 +126,22 @@ class CourseController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => ['required', Rule::in(['active', 'planned', 'ended', 'cancelled'])],
+            'image' => 'nullable|image|max:2048',
+            'cover' => 'nullable|image|max:4096',
+            'remove_image' => 'sometimes|boolean',
+            'remove_cover' => 'sometimes|boolean',
         ]);
+
+        if ($request->boolean('remove_image')) {
+            $validatedData['image_path'] = null;
+        } elseif ($request->hasFile('image')) {
+            $validatedData['image_path'] = $request->file('image')->store('courses/images', 'public');
+        }
+        if ($request->boolean('remove_cover')) {
+            $validatedData['cover_path'] = null;
+        } elseif ($request->hasFile('cover')) {
+            $validatedData['cover_path'] = $request->file('cover')->store('courses/covers', 'public');
+        }
 
         $course->update($validatedData);
 
@@ -126,7 +151,7 @@ class CourseController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-     public function destroy(Course $course)
+    public function destroy(Course $course)
     {
         if ($course->teacher_id !== auth()->id()) {
             abort(403, 'Acesso não autorizado.');

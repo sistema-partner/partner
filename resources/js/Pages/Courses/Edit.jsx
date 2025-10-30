@@ -1,35 +1,38 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import { Head, useForm, Link } from '@inertiajs/react';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import InputError from "@/Components/InputError";
+import InputLabel from "@/Components/InputLabel";
+import PrimaryButton from "@/Components/PrimaryButton";
+import TextInput from "@/Components/TextInput";
+import ImageUpload from "@/Components/ImageUpload";
+import DateRange from "@/Components/DateRange";
+import { Head, useForm, Link } from "@inertiajs/react";
 
 export default function Edit({ auth, course }) {
     const formatDate = (dateString) => {
-        if (!dateString) return '';
-        return new Date(dateString).toISOString().split('T')[0];
+        if (!dateString) return "";
+        return new Date(dateString).toISOString().split("T")[0];
     };
 
-
     const { data, setData, put, processing, errors } = useForm({
-        title: course.title || '',
-        code: course.code || '',
-        description: course.description || '',
+        title: course.title || "",
+        code: course.code || "",
+        description: course.description || "",
         start_date: formatDate(course.start_date),
         end_date: formatDate(course.end_date),
-        status: course.status || '',
+        status: course.status || "",
+        image: course.image_url || null,
+        cover: course.cover_url || null,
+        remove_image: false,
+        remove_cover: false,
     });
 
     const submit = (e) => {
-      e.preventDefault();
-      put(route('courses.update', course.id));
+        e.preventDefault();
+        put(route("courses.update", course.id));
     };
 
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-        >
+        <AuthenticatedLayout user={auth.user}>
             <Head title="Editar Curso" />
 
             <div className="py-12">
@@ -38,19 +41,92 @@ export default function Edit({ auth, course }) {
                         Editar Curso: {course.title}
                     </h1>
                     <div className="bg-card p-6 shadow-sm sm:rounded-lg">
-                        <form onSubmit={submit}>
+                        <form
+                            onSubmit={submit}
+                            encType="multipart/form-data"
+                            className="space-y-6"
+                        >
+                            {/* Uploads */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <ImageUpload
+                                        label="Imagem do Curso"
+                                        name="image"
+                                        value={data.image}
+                                        onChange={(file) => {
+                                            setData("image", file);
+                                            setData("remove_image", false);
+                                        }}
+                                        error={errors.image}
+                                        helper="Miniatura usada em listagens."
+                                    />
+                                    {data.image &&
+                                        !(data.image instanceof File) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setData(
+                                                        "remove_image",
+                                                        true
+                                                    );
+                                                    setData("image", null);
+                                                }}
+                                                className="text-xs text-red-600 hover:text-red-700"
+                                            >
+                                                Remover imagem atual
+                                            </button>
+                                        )}
+                                </div>
+                                <div className="space-y-2">
+                                    <ImageUpload
+                                        label="Imagem de Capa"
+                                        name="cover"
+                                        value={data.cover}
+                                        onChange={(file) => {
+                                            setData("cover", file);
+                                            setData("remove_cover", false);
+                                        }}
+                                        error={errors.cover}
+                                        helper="Exibida como banner da página."
+                                    />
+                                    {data.cover &&
+                                        !(data.cover instanceof File) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setData(
+                                                        "remove_cover",
+                                                        true
+                                                    );
+                                                    setData("cover", null);
+                                                }}
+                                                className="text-xs text-red-600 hover:text-red-700"
+                                            >
+                                                Remover capa atual
+                                            </button>
+                                        )}
+                                </div>
+                            </div>
                             <div>
-                                <InputLabel htmlFor="title" value="Título do Curso" />
+                                <InputLabel
+                                    htmlFor="title"
+                                    value="Título do Curso"
+                                />
                                 <TextInput
                                     id="title"
                                     value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        setData("title", e.target.value)
+                                    }
                                 />
                                 <InputError message={errors.title} />
                             </div>
 
                             <div className="mt-4">
-                                <InputLabel htmlFor="code" value="Código do Curso" />
+                                <InputLabel
+                                    htmlFor="code"
+                                    value="Código do Curso"
+                                />
                                 <TextInput
                                     id="code"
                                     value={data.code}
@@ -61,60 +137,56 @@ export default function Edit({ auth, course }) {
                             </div>
 
                             <div className="mt-4">
-                                <InputLabel htmlFor="description" value="Descrição" />
+                                <InputLabel
+                                    htmlFor="description"
+                                    value="Descrição"
+                                />
                                 <textarea
                                     id="description"
                                     name="description"
                                     value={data.description}
                                     className="mt-1 block w-full border-border bg-background rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     rows="4"
-                                    onChange={(e) => setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        setData("description", e.target.value)
+                                    }
                                 ></textarea>
                                 <InputError message={errors.description} />
                             </div>
 
-                            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <InputLabel htmlFor="start_date" value="Data de Início" />
-                                    <TextInput
-                                        id="start_date"
-                                        type="date"
-                                        value={data.start_date}
-                                        onChange={(e) => setData('start_date', e.target.value)}
-                                    />
-                                    <InputError message={errors.start_date} />
-                                </div>
-                                <div>
-                                    <InputLabel htmlFor="end_date" value="Data de Fim" />
-                                    <TextInput
-                                        id="end_date"
-                                        type="date"
-                                        value={data.end_date}
-                                        onChange={(e) => setData('end_date', e.target.value)}
-                                    />
-                                    <InputError message={errors.end_date} />
-                                </div>
-                            </div>
+                            <DateRange
+                                startValue={data.start_date}
+                                endValue={data.end_date}
+                                onChange={(field, value) =>
+                                    setData(field, value)
+                                }
+                                errors={errors}
+                            />
 
                             <div className="mt-4">
-                              <InputLabel htmlFor="status" value="Status" />
-                              <select
-                                  id="status"
-                                  name="status"
-                                  value={data.status}
-                                  className="mt-1 block w-full border-border bg-background rounded-md shadow-sm"
-                                  onChange={(e) => setData('status', e.target.value)}
-                              >
-                                  <option value="planned">Planejado</option>
-                                  <option value="active">Ativo</option>
-                                  <option value="cancelled">Cancelado</option>
-                                  <option value="ended">Finalizado</option>
-                              </select>
-                              <InputError message={errors.status} />
-                          </div>
-                            
+                                <InputLabel htmlFor="status" value="Status" />
+                                <select
+                                    id="status"
+                                    name="status"
+                                    value={data.status}
+                                    className="mt-1 block w-full border-border bg-background rounded-md shadow-sm"
+                                    onChange={(e) =>
+                                        setData("status", e.target.value)
+                                    }
+                                >
+                                    <option value="planned">Planejado</option>
+                                    <option value="active">Ativo</option>
+                                    <option value="cancelled">Cancelado</option>
+                                    <option value="ended">Finalizado</option>
+                                </select>
+                                <InputError message={errors.status} />
+                            </div>
+
                             <div className="flex items-center justify-end mt-6">
-                                <Link href={route('dashboard')} className="text-sm text-muted-foreground hover:text-foreground mr-4">
+                                <Link
+                                    href={route("dashboard")}
+                                    className="text-sm text-muted-foreground hover:text-foreground mr-4"
+                                >
                                     Cancelar
                                 </Link>
                                 <PrimaryButton disabled={processing}>
