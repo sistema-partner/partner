@@ -22,4 +22,5 @@ Route::middleware(['auth', 'professor.approved'])->group(function () {
 Route::middleware(['auth', 'verified', 'teacher'])->group(function () {
     Route::resource('courses', CourseController::class);
     Route::post('/courses/{course}/contents', [CourseContentController::class, 'store'])->name('courses.contents.store');
+    Route::get('/contents/public', [\App\Http\Controllers\PublicContentController::class, 'index'])->name('contents.public');
 });

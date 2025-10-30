@@ -9,7 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class CourseModule extends Model
 {
     protected $fillable = [
-        'course_id', 'title', 'description', 'order', 'is_public'
+        'course_id',
+        'title',
+        'description',
+        'order',
+        'is_public'
     ];
 
     public function course(): BelongsTo
@@ -19,10 +23,11 @@ class CourseModule extends Model
 
     public function contents(): BelongsToMany
     {
-        return $this->belongsToMany(Content::class, 'module_content')
-                    ->withPivot('order')
-                    ->withTimestamps()
-                    ->orderBy('order');
+        // Pivot table columns are module_id & content_id (not course_module_id)
+        return $this->belongsToMany(Content::class, 'module_content', 'module_id', 'content_id')
+            ->withPivot('order')
+            ->withTimestamps()
+            ->orderBy('order');
     }
 
     public function publishedContents()

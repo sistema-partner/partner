@@ -45,6 +45,17 @@ class CourseController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'image' => 'nullable|image|max:2048',
             'cover' => 'nullable|image|max:4096',
+            'modules' => 'nullable|array',
+            'modules.*.title' => 'required_with:modules|string|max:255',
+            'modules.*.description' => 'nullable|string',
+            'modules.*.contents' => 'nullable|array',
+            'modules.*.contents.*.title' => 'required_with:modules.*.contents|string|max:255',
+            'modules.*.contents.*.type' => 'required_with:modules.*.contents|string|in:video,pdf,document,quiz,assignment,link,text',
+            'modules.*.contents.*.is_public' => 'nullable|boolean',
+            'modules.*.contents.*.file' => 'nullable|file|max:51200', // 50MB
+            'modules.*.contents.*.url' => 'nullable|url',
+            'modules.*.contents.*.content' => 'nullable|string',
+            'modules.*.contents.*.id' => 'nullable|integer|exists:contents,id',
         ], [
             'start_date.after_or_equal' => 'A data de início deve ser hoje ou uma data futura.'
         ]);
@@ -63,7 +74,65 @@ class CourseController extends Controller
             $validatedData['cover_path'] = $request->file('cover')->store('courses/covers', 'public');
         }
 
-        $request->user()->taughtCourses()->create($validatedData);
+        $course = $request->user()->taughtCourses()->create($validatedData);
+
+        // Persistir módulos e conteúdos vinculados, se enviados
+        if (!empty($validatedData['modules'])) {
+            foreach ($validatedData['modules'] as $order => $moduleData) {
+                $module = $course->modules()->create([
+                    'title' => $moduleData['title'] ?? 'Módulo',
+                    'description' => $moduleData['description'] ?? null,
+                    'order' => $order,
+                    'is_public' => true,
+                ]);
+
+                if (!empty($moduleData['contents'])) {
+                    foreach ($moduleData['contents'] as $contentOrder => $contentData) {
+                        // Caso seja um conteúdo existente (público)
+                        if (!empty($contentData['id'])) {
+                            $module->contents()->attach($contentData['id'], ['order' => $contentOrder]);
+                            continue;
+                        }
+
+                        // Criar novo conteúdo
+                        $newContentPayload = [
+                            'user_id' => $request->user()->id,
+                            'title' => $contentData['title'],
+                            'description' => $contentData['description'] ?? null,
+                            'type' => $contentData['type'],
+                            'is_public' => !empty($contentData['is_public']),
+                        ];
+
+                        // Processar arquivo conforme tipo
+                        if (!empty($contentData['file']) && $contentData['file'] instanceof \Illuminate\Http\UploadedFile) {
+                            $subFolder = match ($contentData['type']) {
+                                'video' => 'videos',
+                                'pdf' => 'pdfs',
+                                'document' => 'documents',
+                                'quiz' => 'quizzes',
+                                'assignment' => 'assignments',
+                                default => 'others'
+                            };
+                            $stored = $contentData['file']->store('contents/' . $subFolder, 'public');
+                            $newContentPayload['file_path'] = $stored;
+                        }
+
+                        // URL para links
+                        if ($contentData['type'] === 'link' && !empty($contentData['url'])) {
+                            $newContentPayload['url'] = $contentData['url'];
+                        }
+
+                        // Texto para tipo text
+                        if ($contentData['type'] === 'text' && !empty($contentData['content'])) {
+                            $newContentPayload['content'] = $contentData['content'];
+                        }
+
+                        $createdContent = \App\Models\Content::create($newContentPayload);
+                        $module->contents()->attach($createdContent->id, ['order' => $contentOrder]);
+                    }
+                }
+            }
+        }
 
         return Redirect::route('dashboard')->with('success', 'Curso criado com sucesso!');
     }
