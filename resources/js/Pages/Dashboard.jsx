@@ -19,6 +19,7 @@ export default function Dashboard() {
         total_users = 0,
         recent_users = [],
         teachers = [],
+        role_counts = [],
     } = usePage().props;
     const { user } = auth;
     const renderDashboardContent = () => {
@@ -57,6 +58,7 @@ export default function Dashboard() {
                         totalUsers={total_users}
                         recentUsers={recent_users}
                         teachers={teachers}
+                        role_counts={role_counts}
                     />
                 );
 

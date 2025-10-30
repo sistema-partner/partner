@@ -90,13 +90,18 @@ class DashboardController extends Controller
                 $data['pending_approvals_count'] = $pendingTeachers->count();
                 // Totais de usuários
                 $data['total_users'] = User::count();
-                $data['recent_users'] = User::latest()->take(5)->get(['id', 'name', 'role', 'created_at']);
-                // Distribuição por role
-                $data['role_counts'] = DB::table('users')
-                    ->select('role', DB::raw('count(*) as count'))
+                $data['recent_users'] = User::latest()->take(5)->get(['id', 'name', 'email', 'role', 'created_at']);
+                // Distribuição por role (array simples para o Inertia)
+                $data['role_counts'] = User::select('role', DB::raw('count(*) as count'))
                     ->groupBy('role')
-                    ->get();
+                    ->get()
+                    ->map(fn($row) => ['role' => $row->role, 'count' => $row->count]);
                 break;
+        }
+
+        // Garante que role_counts exista (mesmo se não for admin) para evitar undefined no front
+        if (!array_key_exists('role_counts', $data)) {
+            $data['role_counts'] = collect();
         }
 
         return $data;
