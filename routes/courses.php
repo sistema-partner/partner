@@ -10,6 +10,7 @@ use App\Http\Controllers\CourseController;
 Route::middleware(['auth', 'professor.approved'])->group(function () {
     Route::get('/courses/explore', [PublicCourseController::class, 'index'])->name('courses.explore');
     Route::get('/courses/{course}/details', [PublicCourseController::class, 'show'])->name('courses.details');
+    Route::post('/courses/enroll-by-code', [EnrollmentController::class, 'enrollByCode'])->name('enrollments.by_code');
 
     Route::post('/courses/{course}/enroll', [EnrollmentController::class, 'store'])->name('enrollments.store');
     Route::post('/enrollments/{enrollment}/approve', [EnrollmentController::class, 'approve'])->name('enrollments.approve');

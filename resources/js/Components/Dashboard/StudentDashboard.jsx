@@ -8,11 +8,14 @@ import {
     BarChart3,
 } from "lucide-react";
 import GlassCard from "@/Components/GlassCard";
+import CourseCodeEnrollModal from "@/Components/CourseCodeEnrollModal";
+import { useState } from "react";
 
 export default function StudentDashboard({
     enrolledCourses,
     pendingEnrollments,
 }) {
+    const [showCodeModal, setShowCodeModal] = useState(false);
     // Pré-cálculo de contagens para evitar filtros repetidos
     const activeCount = enrolledCourses.filter(
         (course) => course.status === "active"
@@ -150,12 +153,13 @@ export default function StudentDashboard({
                             title="Nenhum curso ativo"
                             description="Você não está matriculado em nenhum curso ativo no momento."
                             action={
-                                <Link
-                                    /* href={route('courses.index')} */
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCodeModal(true)}
                                     className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700"
                                 >
                                     INSERIR CÓDIGO DE CURSO
-                                </Link>
+                                </button>
                             }
                         />
                     )}
@@ -290,6 +294,10 @@ export default function StudentDashboard({
                     </div>
                 </div>
             </GlassCard>
+            <CourseCodeEnrollModal
+                show={showCodeModal}
+                onClose={() => setShowCodeModal(false)}
+            />
         </div>
     );
 }

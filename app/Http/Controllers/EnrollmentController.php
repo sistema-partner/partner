@@ -11,6 +11,53 @@ use App\Models\EnrollmentLog;
 
 class EnrollmentController extends Controller
 {
+    public function enrollByCode(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string|exists:courses,code'
+        ], [
+            'code.exists' => 'Código de curso inválido.'
+        ]);
+
+        $course = Course::where('code', $request->code)->first();
+
+        if (!$request->user()->isStudent()) {
+            abort(403, 'Apenas estudantes podem se inscrever em cursos.');
+        }
+
+        if (!$course->canEnroll()) {
+            return back()->with('error', 'Este curso não está aceitando matrículas.');
+        }
+
+        $existing = Enrollment::where('student_id', $request->user()->id)
+            ->where('course_id', $course->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->first();
+
+        if ($existing) {
+            return back()->with('error', 'Você já está matriculado ou possui solicitação pendente.');
+        }
+
+        // Cria matrícula já aprovada (sem necessidade de professor)
+        $enrollment = Enrollment::create([
+            'student_id' => $request->user()->id,
+            'course_id' => $course->id,
+            'status' => 'approved',
+            'requested_at' => now(),
+            'approved_at' => now(),
+            'approved_by' => $course->teacher_id
+        ]);
+
+        dd($enrollment);
+
+        EnrollmentLog::create([
+            'enrollment_id' => $enrollment->id,
+            'action' => 'approved_via_code',
+            'performed_by' => $request->user()->id,
+        ]);
+
+        return back()->with('success', 'Matrícula realizada com sucesso através do código!');
+    }
     public function store(Request $request, Course $course)
     {
         if (!$request->user()->isStudent()) {
@@ -20,11 +67,11 @@ class EnrollmentController extends Controller
         if (!$course->canEnroll()) {
             return back()->with('error', 'Este curso não está aceitando matrículas no momento.');
         }
-        
+
         $existingEnrollment = Enrollment::where('student_id', $request->user()->id)
-                                        ->where('course_id', $course->id)
-                                        ->whereIn('status', ['pending', 'approved'])
-                                        ->exists();
+            ->where('course_id', $course->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
 
         if ($existingEnrollment) {
             return back()->with('error', 'Você já solicitou ou está matriculado neste curso.');
@@ -36,7 +83,7 @@ class EnrollmentController extends Controller
             'status' => 'pending',
             'requested_at' => now(),
         ]);
-            
+
         EnrollmentLog::create([
             'enrollment_id' => $enrollment->id,
             'action' => 'requested',
@@ -100,7 +147,7 @@ class EnrollmentController extends Controller
         }
 
         $data = $request->validate(['reason' => 'nullable|string|max:255']);
-        
+
         $enrollment->cancel($user->id, $data['reason'] ?? 'Cancelado pelo usuário.');
 
         return back()->with('success', 'Matrícula cancelada com sucesso.');
