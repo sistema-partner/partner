@@ -2,16 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
+use App\Models\Enrollment;
+use App\Models\CourseContent;
+use App\Models\CourseModule;
+use App\Models\Tag;
+use App\Models\Content;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+
 
 class Course extends Model
 {
-    use HasFactory;
 
     protected $fillable = [
-        'teacher_id', 'title', 'code', 'description', 'image_url',
-        'status', 'visibility', 'max_students', 'start_date', 'end_date',
+        'teacher_id',
+        'title',
+        'code',
+        'description',
+        'image_path',
+        'cover_path',
+        'status',
+        'visibility',
+        'max_students',
+        'start_date',
+        'end_date',
         'accepts_enrollments'
     ];
 
@@ -22,7 +38,8 @@ class Course extends Model
         'max_students' => 'integer'
     ];
 
-    // Relações
+    protected $appends = ['image_url', 'cover_url'];
+
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
@@ -61,26 +78,70 @@ class Course extends Model
 
     public function canEnroll()
     {
-        return $this->accepts_enrollments && 
-               $this->isActive() && 
-               ($this->max_students === null || 
+        // Permite matrícula se curso aceita matrículas e está ativo ou planejado
+        return $this->accepts_enrollments &&
+            in_array($this->status, ['active', 'planned']) &&
+            ($this->max_students === null ||
                 $this->activeEnrollments()->count() < $this->max_students);
     }
 
     public function contents()
     {
-        return $this->hasMany(CourseContent::class)->latest(); 
+        return $this->hasMany(CourseContent::class)->latest();
     }
-    
+
     public function students()
     {
         return $this->belongsToMany(User::class, 'enrollments', 'course_id', 'student_id')
             ->withPivot('status', 'approved_at')
             ->withTimestamps();
     }
-    
+
     public function approvedStudents()
     {
         return $this->students()->wherePivot('status', 'approved');
     }
+
+    public function modules(): HasMany
+    {
+        return $this->hasMany(CourseModule::class)->orderBy('order');
+    }
+
+    public function tags(): MorphToMany
+    {
+        return $this->morphToMany(Tag::class, 'taggable')
+            ->withPivot('weight', 'context')
+            ->withTimestamps();
+    }
+
+    public function getMainTagsAttribute()
+    {
+        return $this->tags()->wherePivot('weight', '>=', 0.7)->get();
+    }
+
+    public function recommendedContents()
+    {
+        $courseTags = $this->tags()->pluck('tags.id');
+
+        return Content::public()
+            ->whereHas('tags', function ($query) use ($courseTags) {
+                $query->whereIn('tags.id', $courseTags);
+            })
+            ->withHighRating(4.0)
+            ->withCount('modules')
+            ->orderBy('usage_count', 'desc')
+            ->orderBy('view_count', 'desc')
+            ->get();
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image_path ? asset('storage/' . $this->image_path) : null;
+    }
+
+    public function getCoverUrlAttribute(): ?string
+    {
+        return $this->cover_path ? asset('storage/' . $this->cover_path) : null;
+    }
+
 }

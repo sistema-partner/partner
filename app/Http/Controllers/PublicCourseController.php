@@ -23,9 +23,12 @@ class PublicCourseController extends Controller
 
     public function show(Request $request, Course $course)
     {
-        // ANTES: $course->load('teacher');
-        // DEPOIS: Carregamos o professor e também os conteúdos com seus autores.
-        $course->load(['teacher', 'contents.author']);
+        // Carrega professor, avisos (contents) e módulos com conteúdos e autores
+        $course->load([
+            'teacher',
+            'contents.author',
+            'modules.contents.user'
+        ]);
         
         $enrollmentStatus = $course->enrollments()
                                 ->where('student_id', $request->user()->id)

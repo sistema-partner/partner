@@ -24,6 +24,10 @@ class IsProfessorApproved
 
         // Lógica normal de aprovação
         if (in_array($user->role, ['teacher', 'researcher']) && $user->status !== 'approved') {
+            // Evita loop de redirecionamento: se já estiver na página de pendência, segue
+            if ($request->routeIs('pending-approval')) {
+                return $next($request);
+            }
             return redirect()->route('pending-approval');
         }
 
