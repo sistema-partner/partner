@@ -38,14 +38,14 @@ class NotificationController extends Controller
     {
         $notification = $request->user()->notifications()->findOrFail($notificationId);
         $notification->markAsRead();
-
-        return response()->json(['success' => true]);
+        // Retorna um redirect para suportar chamadas via Inertia (router.patch)
+        return redirect()->back();
     }
 
     public function markAllAsRead(Request $request)
     {
         $request->user()->unreadNotifications()->update(['read_at' => now()]);
-
-        return response()->json(['success' => true]);
+        // Redirect simples evita resposta JSON e satisfaz Inertia
+        return redirect()->back();
     }
 }
