@@ -16,7 +16,7 @@ class EnrollmentRequestNotification extends Notification // 👈 REMOVA "impleme
 
     public function via(object $notifiable): array
     {
-        return ['database']; // 👈 REMOVA 'mail' temporariamente
+        return ['database', 'mail']; // 👈 REMOVA 'mail' temporariamente
     }
 
     public function toDatabase(object $notifiable): array
@@ -33,6 +33,17 @@ class EnrollmentRequestNotification extends Notification // 👈 REMOVA "impleme
             'enrollment_id' => $this->enrollment->id,
             'url' => '/courses/' . $this->enrollment->course->id . '/enrollments',
         ];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject('Nova Solicitação de Matrícula 📥')
+            ->greeting('Olá ' . $notifiable->name . ',')
+            ->line($this->enrollment->student->name . ' solicitou entrada no curso "' . $this->enrollment->course->title . '".')
+            ->action('Ver Solicitação', url('/courses/' . $this->enrollment->course->id . '/enrollments'))
+            ->line('Obrigado por usar nossa plataforma!')
+            ->salutation('Equipe ' . config('app.name'));
     }
 
     public function toArray(object $notifiable): array
