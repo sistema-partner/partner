@@ -36,6 +36,27 @@ export default function Create({ auth }) {
         setData("modules", modules);
     };
 
+    const removeModule = (index) => {
+        const modules = [...data.modules];
+        modules.splice(index, 1);
+        setData("modules", modules);
+        // Se o módulo ativo foi removido, fechar modal
+        if (activeModuleIndex === index) {
+            setShowContentModal(false);
+            setActiveModuleIndex(null);
+        }
+    };
+
+    const confirmRemoveModule = (index) => {
+        if (
+            window.confirm(
+                "Remover este módulo? Esta ação não pode ser desfeita."
+            )
+        ) {
+            removeModule(index);
+        }
+    };
+
     const attachContentToModule = (content) => {
         const modules = [...data.modules];
         modules[activeModuleIndex].contents.push(content);
@@ -232,8 +253,30 @@ export default function Create({ auth }) {
                                         {data.modules.map((m, idx) => (
                                             <div
                                                 key={idx}
-                                                className="border border-gray-200 dark:border-gray-700 rounded-md p-4 space-y-3 bg-gray-50 dark:bg-gray-700/30"
+                                                className="relative border border-gray-200 dark:border-gray-700 rounded-md p-4 pt-6 space-y-3 bg-gray-50 dark:bg-gray-700/30 group"
                                             >
+                                                {/* Botão deletar módulo */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        confirmRemoveModule(idx)
+                                                    }
+                                                    aria-label="Remover módulo"
+                                                    className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-md shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-800"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                        className="w-4 h-4"
+                                                    >
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                            clipRule="evenodd"
+                                                        />
+                                                    </svg>
+                                                </button>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">
