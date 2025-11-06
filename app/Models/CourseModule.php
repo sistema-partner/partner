@@ -16,6 +16,11 @@ class CourseModule extends Model
         'is_public'
     ];
 
+    protected $casts = [
+        'order' => 'integer',
+        'is_public' => 'boolean'
+    ];
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
@@ -28,6 +33,11 @@ class CourseModule extends Model
             ->withPivot('order')
             ->withTimestamps()
             ->orderBy('order');
+    }
+
+    public function moduleContents()
+    {
+        return $this->hasMany(ModuleContent::class, 'module_id')->orderBy('order');
     }
 
     public function publishedContents()

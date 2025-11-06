@@ -72,24 +72,24 @@ export default function AppHeader({
 
     // Marcar uma notificação individual como lida (sem navegar via Inertia)
     const markAsRead = (notificationId) => {
-      if (!notificationId) return;
-      // Otimista: atualiza antes da resposta
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, read: true } : n
-        )
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-      router.patch(
-        `/notifications/${notificationId}/read`,
-        {},
-        {
-          preserveScroll: true,
-          onError: (e) => {
-            console.error("Falha ao marcar como lida", e);
-          },
-        }
-      );
+        if (!notificationId) return;
+        // Otimista: atualiza antes da resposta
+        setNotifications((prev) =>
+            prev.map((n) =>
+                n.id === notificationId ? { ...n, read: true } : n
+            )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+        router.patch(
+            `/notifications/${notificationId}/read`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (e) => {
+                    console.error("Falha ao marcar como lida", e);
+                },
+            }
+        );
     };
 
     // Marcar todas como lidas

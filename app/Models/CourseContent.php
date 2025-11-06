@@ -17,6 +17,21 @@ class CourseContent extends Model
         'body',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::saving(function (CourseContent $model) {
+            if (empty($model->type)) {
+                $model->type = 'announcement';
+            }
+        });
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function course()
     {
         return $this->belongsTo(Course::class);
