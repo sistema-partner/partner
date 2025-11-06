@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PublicCourseController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\CourseContentController;
+use App\Http\Controllers\ContentViewerController;
 use App\Http\Controllers\CourseController;
 
 // Exploração e detalhes acessíveis após autenticação e aprovação
@@ -23,4 +24,9 @@ Route::middleware(['auth', 'verified', 'teacher'])->group(function () {
     Route::resource('courses', CourseController::class);
     Route::post('/courses/{course}/contents', [CourseContentController::class, 'store'])->name('courses.contents.store');
     Route::get('/contents/public', [\App\Http\Controllers\PublicContentController::class, 'index'])->name('contents.public');
+});
+
+// Visualização interna de conteúdo (qualquer usuário autenticado/verificado aprovado no curso ou autor)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/contents/{content}', [ContentViewerController::class, 'show'])->name('contents.show');
 });

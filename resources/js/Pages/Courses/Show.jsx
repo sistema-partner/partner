@@ -260,12 +260,22 @@ export default function Show({ auth, course }) {
                                                                         )}
                                                                     </div>
                                                                     <h5 className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                                        {
-                                                                            content.title
-                                                                        }
+                                                                        <Link
+                                                                            href={route(
+                                                                                "contents.show",
+                                                                                content
+                                                                                    .pivot
+                                                                                    ?.id ||
+                                                                                    content.id
+                                                                            )}
+                                                                            className="hover:underline"
+                                                                        >
+                                                                            {content.title ||
+                                                                                "Sem título"}
+                                                                        </Link>
                                                                     </h5>
                                                                     {content.description && (
-                                                                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+                                                                        <p className="mt-1  text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
                                                                             {
                                                                                 content.description
                                                                             }
@@ -301,20 +311,25 @@ export default function Show({ auth, course }) {
                                                                         )}
                                                                     {content.file_path && (
                                                                         <div className="mt-2">
-                                                                            <a
-                                                                                href={`/storage/${content.file_path}`}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-300 hover:underline"
+                                                                            <Link
+                                                                                href={route(
+                                                                                    "contents.show",
+                                                                                    content
+                                                                                        .pivot
+                                                                                        ?.id ||
+                                                                                        content.id
+                                                                                )}
+                                                                                className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-300 hover:text-indigo-500 dark:hover:text-indigo-200 hover:underline"
                                                                             >
                                                                                 <ClipboardCopy
                                                                                     size={
                                                                                         12
                                                                                     }
                                                                                 />{" "}
-                                                                                Abrir
-                                                                                arquivo
-                                                                            </a>
+                                                                                Ver
+                                                                                no
+                                                                                Visualizador
+                                                                            </Link>
                                                                         </div>
                                                                     )}
                                                                 </div>
