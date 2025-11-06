@@ -113,7 +113,9 @@ class EnrollmentController extends Controller
         }
 
         $enrollment->approve(Auth::id());
-
+        
+        // notificar o estudante que a matrícula foi aprovada
+        $enrollment->student->notify(new \App\Notifications\EnrollmentApprovedNotification($enrollment));
         return back()->with('success', 'Matrícula aprovada com sucesso.');
     }
 
