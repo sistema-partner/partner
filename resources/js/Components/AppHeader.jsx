@@ -4,6 +4,7 @@ import ThemeToggler from "@/Components/ThemeToggler";
 import Dropdown from "@/Components/Dropdown";
 import NavLink from "@/Components/NavLink";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
+import NotificationItem from "@/Components/Micro/NotificationItem";
 import {
     Users,
     Eye,
@@ -69,26 +70,26 @@ export default function AppHeader({
         return () => clearInterval(interval);
     }, [user]);
 
-    // Marcar como lida
+    // Marcar uma notificação individual como lida (sem navegar via Inertia)
     const markAsRead = (notificationId) => {
-        router.patch(
-            `/notifications/${notificationId}/read`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setNotifications((prev) =>
-                        prev.map((notif) =>
-                            notif.id === notificationId
-                                ? { ...notif, read: true }
-                                : notif
-                        )
-                    );
-                    setUnreadCount((prev) => Math.max(0, prev - 1));
-                },
-                onError: () => console.error("Erro ao marcar como lida"),
-            }
-        );
+      if (!notificationId) return;
+      // Otimista: atualiza antes da resposta
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notificationId ? { ...n, read: true } : n
+        )
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      router.patch(
+        `/notifications/${notificationId}/read`,
+        {},
+        {
+          preserveScroll: true,
+          onError: (e) => {
+            console.error("Falha ao marcar como lida", e);
+          },
+        }
+      );
     };
 
     // Marcar todas como lidas
@@ -115,86 +116,7 @@ export default function AppHeader({
         );
     };
 
-    // Componente de item de notificação
-    const NotificationItem = ({ notification }) => {
-        const handleClick = () => {
-            if (!notification.read) {
-                markAsRead(notification.id);
-            }
-
-            // Fechar dropdown
-            setIsNotificationsOpen(false);
-
-            // Navegar para URL da notificação se existir
-            if (notification.data?.url) {
-                window.location.href = notification.data.url;
-            }
-        };
-
-        const getNotificationIcon = (type) => {
-            const icons = {
-                enrollment_approved: "🎉",
-                enrollment_request: "📥",
-                course_start: "🚀",
-                course_end: "📚",
-                student_enrolled_code: "👨‍🎓",
-            };
-            return icons[type] || "🔔";
-        };
-
-        const formatTime = (dateString) => {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-
-            if (diffMins < 1) return "Agora";
-            if (diffMins < 60) return `${diffMins}m atrás`;
-            if (diffHours < 24) return `${diffHours}h atrás`;
-            if (diffDays < 7) return `${diffDays}d atrás`;
-
-            return date.toLocaleDateString("pt-BR");
-        };
-
-        return (
-            <div
-                className={`p-3 border-b cursor-pointer transition-colors ${
-                    notification.read
-                        ? "bg-white"
-                        : "bg-blue-50 dark:bg-blue-900/20"
-                } hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600`}
-                onClick={handleClick}
-            >
-                <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-lg">
-                        {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h4
-                            className={`text-sm font-medium ${
-                                notification.read
-                                    ? "text-gray-900 dark:text-gray-100"
-                                    : "text-gray-900 dark:text-gray-100 font-semibold"
-                            }`}
-                        >
-                            {notification.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                            {notification.message}
-                        </p>
-                        <span className="text-xs text-gray-400 dark:text-gray-500 mt-2 block">
-                            {formatTime(notification.created_at)}
-                        </span>
-                    </div>
-                    {!notification.read && (
-                        <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2" />
-                    )}
-                </div>
-            </div>
-        );
-    };
+    // NotificationItem movido para micro componente (importado)
 
     const getRoleLabel = (role) => {
         const labels = {
@@ -285,6 +207,14 @@ export default function AppHeader({
                                                                 }
                                                                 notification={
                                                                     notification
+                                                                }
+                                                                onRead={
+                                                                    markAsRead
+                                                                }
+                                                                onClose={() =>
+                                                                    setIsNotificationsOpen(
+                                                                        false
+                                                                    )
                                                                 }
                                                             />
                                                         )
