@@ -72,6 +72,22 @@ export default function Show({ auth, course }) {
     );
     const [copied, setCopied] = useState(false);
 
+    // Formata diferença de tempo (simples)
+    const formatRelative = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const mins = Math.floor(diffMs / 60000);
+        const hours = Math.floor(diffMs / 3600000);
+        const days = Math.floor(diffMs / 86400000);
+        if (mins < 1) return "agora";
+        if (mins < 60) return `${mins}m atrás`;
+        if (hours < 24) return `${hours}h atrás`;
+        if (days < 7) return `${days}d atrás`;
+        return date.toLocaleDateString("pt-BR");
+    };
+
     const handleCopyCode = async () => {
         try {
             await navigator.clipboard.writeText(course.code);
@@ -333,6 +349,119 @@ export default function Show({ auth, course }) {
                         </GlassCard>
                     ) : null}
 
+                    <GlassCard
+                        title="Matrículas"
+                        description="Gerencie solicitações pendentes e acompanhe o status dos alunos."
+                    >
+                        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                            Solicitações Pendentes
+                        </h3>
+                        {pendingEnrollments.length > 0 ? (
+                            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {pendingEnrollments.map((enrollment) => (
+                                    <div
+                                        key={enrollment.id}
+                                        className="group relative rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/50 backdrop-blur-sm p-4 shadow-sm hover:shadow-md transition-shadow"
+                                    >
+                                        <div className="flex items-start justify-between gap-3 mb-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
+                                                    {enrollment.student.name
+                                                        .slice(0, 2)
+                                                        .toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight">
+                                                        {
+                                                            enrollment.student
+                                                                .name
+                                                        }
+                                                    </p>
+                                                    <p className="text-[11px] text-gray-500 dark:text-gray-400 break-all">
+                                                        {
+                                                            enrollment.student
+                                                                .email
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <EnrollmentStatusBadge
+                                                status={enrollment.status}
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
+                                            Solicitado{" "}
+                                            {formatRelative(
+                                                enrollment.created_at
+                                            )}
+                                        </p>
+                                        <div className="flex flex-col gap-2">
+                                            <Link
+                                                as="button"
+                                                href={route(
+                                                    "enrollments.approve",
+                                                    enrollment.id
+                                                )}
+                                                method="post"
+                                                className="inline-flex items-center justify-center gap-1 rounded-md bg-green-600/90 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500 text-white text-xs font-semibold px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500/60 focus:ring-offset-1 transition-colors"
+                                            >
+                                                <Check size={14} /> Aprovar
+                                            </Link>
+                                            <Link
+                                                as="button"
+                                                href={route(
+                                                    "enrollments.reject",
+                                                    enrollment.id
+                                                )}
+                                                method="post"
+                                                className="inline-flex items-center justify-center gap-1 rounded-md bg-red-600/90 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-500 text-white text-xs font-semibold px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/60 focus:ring-offset-1 transition-colors"
+                                            >
+                                                <X size={14} /> Rejeitar
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="mb-6 flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-600 p-6 text-center">
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Nenhuma solicitação de matrícula pendente no
+                                    momento.
+                                </p>
+                            </div>
+                        )}
+
+                        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 mt-2">
+                            Outras Matrículas
+                        </h3>
+                        {otherEnrollments.length > 0 ? (
+                            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                                {otherEnrollments.map((enrollment) => (
+                                    <li
+                                        key={enrollment.id}
+                                        className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                                    >
+                                        <div>
+                                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                                                {enrollment.student.name}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {enrollment.student.email}
+                                            </p>
+                                        </div>
+                                        <EnrollmentStatusBadge
+                                            status={enrollment.status}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Nenhuma outra matrícula encontrada.
+                            </p>
+                        )}
+                    </GlassCard>
+
                     {/* Mural de Avisos */}
                     <GlassCard
                         title="Mural de Avisos"
@@ -375,99 +504,6 @@ export default function Show({ auth, course }) {
                                 </p>
                             )}
                         </div>
-                    </GlassCard>
-
-                    {/* Matrículas */}
-                    <GlassCard
-                        title="Matrículas"
-                        description="Gerencie solicitações pendentes e acompanhe o status dos alunos."
-                    >
-                        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">
-                            Solicitações Pendentes
-                        </h3>
-                        {pendingEnrollments.length > 0 ? (
-                            <ul className="divide-y divide-gray-200 dark:divide-gray-700 mb-6">
-                                {pendingEnrollments.map((enrollment) => (
-                                    <li
-                                        key={enrollment.id}
-                                        className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-                                    >
-                                        <div>
-                                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                {enrollment.student.name}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                {enrollment.student.email}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <EnrollmentStatusBadge
-                                                status={enrollment.status}
-                                            />
-                                            <Link
-                                                as="button"
-                                                href={route(
-                                                    "enrollments.approve",
-                                                    enrollment.id
-                                                )}
-                                                method="post"
-                                                className="inline-flex items-center gap-1 rounded-md bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500 text-white text-xs font-semibold px-3 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500/60 focus:ring-offset-1 transition-colors"
-                                            >
-                                                <Check size={14} />
-                                                Aprovar
-                                            </Link>
-                                            <Link
-                                                as="button"
-                                                href={route(
-                                                    "enrollments.reject",
-                                                    enrollment.id
-                                                )}
-                                                method="post"
-                                                className="inline-flex items-center gap-1 rounded-md bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500 text-white text-xs font-semibold px-3 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500/60 focus:ring-offset-1 transition-colors"
-                                            >
-                                                <X size={14} />
-                                                Rejeitar
-                                            </Link>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
-                                Nenhuma solicitação de matrícula pendente no
-                                momento.
-                            </p>
-                        )}
-
-                        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 mt-2">
-                            Outras Matrículas
-                        </h3>
-                        {otherEnrollments.length > 0 ? (
-                            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {otherEnrollments.map((enrollment) => (
-                                    <li
-                                        key={enrollment.id}
-                                        className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-                                    >
-                                        <div>
-                                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                {enrollment.student.name}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                {enrollment.student.email}
-                                            </p>
-                                        </div>
-                                        <EnrollmentStatusBadge
-                                            status={enrollment.status}
-                                        />
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Nenhuma outra matrícula encontrada.
-                            </p>
-                        )}
                     </GlassCard>
 
                     <div className="flex justify-end">

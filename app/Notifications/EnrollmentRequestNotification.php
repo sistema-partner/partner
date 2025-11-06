@@ -31,7 +31,7 @@ class EnrollmentRequestNotification extends Notification // 👈 REMOVA "impleme
             'student_id' => $this->enrollment->student->id,
             'student_name' => $this->enrollment->student->name,
             'enrollment_id' => $this->enrollment->id,
-            'url' => '/courses/' . $this->enrollment->course->id . '/enrollments',
+            'url' => '/courses/' . $this->enrollment->course->id,
         ];
     }
 
