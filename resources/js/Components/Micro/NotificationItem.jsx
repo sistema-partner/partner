@@ -11,11 +11,12 @@ import { Bell } from "lucide-react";
 export default function NotificationItem({ notification, onRead, onClose }) {
     const handleClick = () => {
         if (!notification.read && onRead) {
-            console.log(notification);
             onRead(notification.id);
         }
         if (onClose) onClose();
-
+        if (notification.data?.url) {
+            window.location.href = notification.data.url;
+        }
     };
 
     const getNotificationIcon = (type) => {
