@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: partner-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www
+      - vendor_data:/var/www/vendor
+      - node_modules_data:/var/www/node_modules
+      - build_data:/var/www/public/build
+      - ./storage/app/public:/var/www/storage/app/public
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/database/database.sqlite
+      - QUEUE_CONNECTION=database
+    depends_on:
+      - redis
+    networks:
+      - partner-network
+
+  # Serviço Redis para cache e sessões (opcional)
+  redis:
+    image: redis:7-alpine
+    container_name: partner-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - partner-network
+
+  # Worker para processar filas (opcional)
+  queue:
+    build: .
+    container_name: partner-queue
+    volumes:
+      - .:/var/www
+      - vendor_data:/var/www/vendor
+      - node_modules_data:/var/www/node_modules
+      - build_data:/var/www/public/build
+    environment:
+      - APP_ENV=local
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/database/database.sqlite
+      - QUEUE_CONNECTION=database
+    command: php artisan queue:work --sleep=3 --tries=3
+    depends_on:
+      - app
+      - redis
+    networks:
+      - partner-network
+
+  # Serviço MySQL (alternativo ao SQLite)
+  # Descomente se preferir usar MySQL
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: partner-mysql
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: secret
+  #     MYSQL_DATABASE: partner
+  #     MYSQL_USER: partner
+  #     MYSQL_PASSWORD: secret
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - partner-network
+
+  # Serviço PostgreSQL (alternativo ao SQLite)
+  # Descomente se preferir usar PostgreSQL
+  # postgres:
+  #   image: postgres:15
+  #   container_name: partner-postgres
+  #   environment:
+  #     POSTGRES_DB: partner
+  #     POSTGRES_USER: partner
+  #     POSTGRES_PASSWORD: secret
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - partner-network
+
+  # Mailhog para teste de emails em desenvolvimento
+  mailhog:
+    image: mailhog/mailhog
+    container_name: partner-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - partner-network
+
+networks:
+  partner-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  vendor_data:
+  node_modules_data:
+  build_data:
+  # mysql_data:    # Descomente se usar MySQL
+  # postgres_data: # Descomente se usar PostgreSQL
