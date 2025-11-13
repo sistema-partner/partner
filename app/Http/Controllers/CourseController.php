@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
@@ -148,10 +149,17 @@ class CourseController extends Controller
             $course->load([
                 'enrollments.student',
                 'contents.author', // avisos (CourseContent)
-                'modules.contents.user' // módulos e conteúdos reutilizáveis/não-anúncios
+                'modules.contents.user', // módulos e conteúdos reutilizáveis/não-anúncios
+                'tags'
             ]);
+
+            $contentTags = Tag::where('type', 'topic')->get()->map(fn($tag) => [
+                'value' => $tag->name, 'label' => $tag->name
+            ]);
+
             return Inertia::render('Courses/Show', [
                 'course' => $course,
+                'contentTags' => $contentTags,
             ]);
         }
 
@@ -180,13 +188,25 @@ class CourseController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit(Course $course)
-    {
+     {
         if ($course->teacher_id !== auth()->id()) {
             abort(403, 'Acesso não autorizado.');
         }
 
+        $courseTags = $course->tags->map(fn($tag) => [
+            'value' => $tag->name, 'label' => $tag->name
+        ]);
+        
+        $allCourseTags = Tag::whereIn('type', ['skill', 'level', 'topic', 'tool', 'audience'])
+                            ->get()
+                            ->map(fn($tag) => [
+                                'value' => $tag->name, 'label' => $tag->name
+                            ]);
+
         return Inertia::render('Courses/Edit', [
             'course' => $course,
+            'courseTags' => $courseTags,
+            'allCourseTags' => $allCourseTags, 
         ]);
     }
 
@@ -223,6 +243,19 @@ class CourseController extends Controller
             $validatedData['cover_path'] = null;
         } elseif ($request->hasFile('cover')) {
             $validatedData['cover_path'] = $request->file('cover')->store('courses/covers', 'public');
+        }
+        if ($request->has('tags')) {
+            $tagNames = collect($request->input('tags'))->pluck('value');
+            $tagIds = [];
+
+            foreach ($tagNames as $name) {
+                $tag = Tag::firstOrCreate(
+                    ['slug' => Str::slug($name)],
+                    ['name' => $name, 'type' => 'topic']
+                );
+                $tagIds[] = $tag->id;
+            }
+            $course->tags()->sync($tagIds);
         }
 
         $course->update($validatedData);

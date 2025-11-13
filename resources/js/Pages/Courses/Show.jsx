@@ -4,10 +4,13 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import GlassCard from "@/Components/GlassCard";
 import { useState } from "react";
 import { ClipboardCopy, ClipboardCheck, Check, X } from "lucide-react";
+import InputLabel from '@/Components/InputLabel';
+import TagInput from '@/Components/TagInput'; 
 
-const AnnouncementForm = ({ course }) => {
+const AnnouncementForm = ({ course, contentTags }) => {
     const { data, setData, post, processing, errors, reset } = useForm({
         body: "",
+        tags: [],
     });
 
     const submit = (e) => {
@@ -29,6 +32,15 @@ const AnnouncementForm = ({ course }) => {
             {errors.body && (
                 <p className="text-sm text-red-600">{errors.body}</p>
             )}
+            <div>
+                <InputLabel htmlFor="content_tags" value="Tags do Conteúdo" />
+                <TagInput
+                    id="content_tags"
+                    options={contentTags}
+                    value={data.tags}
+                    onChange={(selectedOptions) => setData('tags', selectedOptions)}
+                />
+            </div>
             <div className="flex justify-end">
                 <PrimaryButton disabled={processing}>
                     Postar Aviso
@@ -63,7 +75,7 @@ const EnrollmentStatusBadge = ({ status }) => {
     );
 };
 
-export default function Show({ auth, course }) {
+export default function Show({ auth, course, contentTags }) {
     const pendingEnrollments = course.enrollments.filter(
         (e) => e.status === "pending"
     );
@@ -131,6 +143,7 @@ export default function Show({ auth, course }) {
                     {/* Detalhes do Curso */}
                     <GlassCard>
                         {(course.cover_url || course.image_url) && (
+                            // ... (código existente da imagem) ...
                             <div className="mb-6 -mt-2 -mx-2">
                                 <div className="rounded-lg overflow-hidden h-56 relative">
                                     <img
@@ -197,6 +210,26 @@ export default function Show({ auth, course }) {
                                 <p className="mt-1 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                                     {course.description}
                                 </p>
+                            </div>
+
+                            <div className="md:col-span-3">
+                                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                    Tags do Curso
+                                </h3>
+
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {course.tags && course.tags.length > 0 ? (
+                                        course.tags.map(tag => (
+                                            <span key={tag.id} className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">
+                                                {tag.name}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                                            Nenhuma tag associada a este curso.
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </GlassCard>
@@ -483,7 +516,7 @@ export default function Show({ auth, course }) {
                         description="Envie comunicados rápidos para os alunos matriculados."
                     >
                         <div className="mb-6">
-                            <AnnouncementForm course={course} />
+                            <AnnouncementForm course={course} contentTags={contentTags} />
                         </div>
                         <div className="space-y-6">
                             {course.contents
@@ -509,6 +542,13 @@ export default function Show({ auth, course }) {
                                         <p className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
                                             {content.body}
                                         </p>
+                                         <div className="mt-2 flex flex-wrap gap-2">
+                                            {content.tags?.map(tag => (
+                                                <span key={tag.id} className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                                                    {tag.name}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
                                 ))}
                             {course.contents.filter(

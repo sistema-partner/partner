@@ -14,15 +14,15 @@ class Tag extends Model
     public function courses(): MorphToMany
     {
         return $this->morphToMany(Course::class, 'taggable')
-                    ->withPivot('weight', 'context')
-                    ->withTimestamps();
+                        ->withPivot('weight', 'context')
+                        ->withTimestamps();
     }
 
     public function contents(): MorphToMany
     {
-        return $this->morphToMany(Content::class, 'taggable')
-                    ->withPivot('weight', 'context')
-                    ->withTimestamps();
+        return $this->morphToMany(CourseContent::class, 'taggable')
+                        ->withPivot('weight', 'context')
+                        ->withTimestamps();
     }
 
     // Escopos úteis
@@ -34,6 +34,6 @@ class Tag extends Model
     public function scopePopular($query, int $minUsage = 5)
     {
         return $query->where('usage_count', '>=', $minUsage)
-                     ->orderBy('usage_count', 'desc');
+                        ->orderBy('usage_count', 'desc');
     }
 }
