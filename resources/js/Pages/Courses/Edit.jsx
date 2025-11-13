@@ -6,8 +6,9 @@ import TextInput from "@/Components/TextInput";
 import ImageUpload from "@/Components/ImageUpload";
 import DateRange from "@/Components/DateRange";
 import { Head, useForm, Link } from "@inertiajs/react";
+import TagInput from '@/Components/TagInput';
 
-export default function Edit({ auth, course }) {
+export default function Edit({ auth, course, courseTags, allCourseTags }) {
     const formatDate = (dateString) => {
         if (!dateString) return "";
         return new Date(dateString).toISOString().split("T")[0];
@@ -24,6 +25,7 @@ export default function Edit({ auth, course }) {
         cover: null, // novo arquivo apenas
         remove_image: false,
         remove_cover: false,
+        tags: courseTags || [],
     });
 
     const submit = (e) => {
@@ -173,7 +175,16 @@ export default function Edit({ auth, course }) {
                                 </select>
                                 <InputError message={errors.status} />
                             </div>
-
+                            <div className="mt-4">
+                                <InputLabel htmlFor="tags" value="Tags do Curso" />
+                                <TagInput
+                                    id="tags"
+                                    options={allCourseTags}
+                                    value={data.tags}
+                                    onChange={(selectedOptions) => setData('tags', selectedOptions)}
+                                />
+                                <InputError message={errors.tags} className="mt-2" />
+                            </div>
                             <div className="flex items-center justify-end mt-6">
                                 <Link
                                     href={route("dashboard")}
