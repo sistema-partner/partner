@@ -211,7 +211,12 @@ export default function TeacherDashboard({
                                                         {new Date(
                                                             course.start_date
                                                         ).toLocaleDateString(
-                                                            "pt-BR"
+                                                            "pt-BR", {
+                                                                timeZone: 'UTC',
+                                                                day: '2-digit',
+                                                                month: '2-digit',
+                                                                year: 'numeric',
+                                                            }
                                                         )}
                                                     </span>
                                                 )}
@@ -221,7 +226,12 @@ export default function TeacherDashboard({
                                                         {new Date(
                                                             course.end_date
                                                         ).toLocaleDateString(
-                                                            "pt-BR"
+                                                            "pt-BR", {
+                                                                timeZone: 'UTC',
+                                                                day: '2-digit',
+                                                                month: '2-digit',
+                                                                year: 'numeric',
+                                                            }
                                                         )}
                                                     </span>
                                                 )}
