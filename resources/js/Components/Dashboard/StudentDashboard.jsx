@@ -350,7 +350,12 @@ function CourseCard({ course, type }) {
                     >
                         Início em{" "}
                         {new Date(course.start_date).toLocaleDateString(
-                            "pt-BR"
+                            "pt-BR", {
+                                timeZone: 'UTC',
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                            }
                         )}
                     </button>
                 );
@@ -411,17 +416,27 @@ function CourseCard({ course, type }) {
                             <span>Início:</span>
                             <span>
                                 {new Date(course.start_date).toLocaleDateString(
-                                    "pt-BR"
+                                    "pt-BR", {
+                                        timeZone: 'UTC',
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                    }
                                 )}
                             </span>
                         </div>
                     )}
                     {course.end_date && (
-                        <div className="flex justify-between">
+                        <div className="flex justify-between    ">
                             <span>Término:</span>
                             <span>
                                 {new Date(course.end_date).toLocaleDateString(
-                                    "pt-BR"
+                                    "pt-BR", {
+                                        timeZone: 'UTC',
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                    }
                                 )}
                             </span>
                         </div>
