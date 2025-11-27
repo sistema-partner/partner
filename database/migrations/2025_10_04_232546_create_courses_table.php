@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('code', 20)->unique();
             $table->text('description')->nullable();
             $table->string('image_url', 500)->nullable();
-            $table->string('cover_url', 500)->nullable();
             $table->enum('status', ['active', 'planned', 'ended', 'cancelled'])->default('planned');
             $table->enum('visibility', ['public', 'private'])->default('public');
             $table->unsignedInteger('max_students')->nullable();

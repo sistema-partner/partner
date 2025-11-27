@@ -375,9 +375,9 @@ function CourseCard({ course, type }) {
 
     return (
         <div className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-            {(course.image_url || course.cover_url) && (
+            {(course.image_url) && (
                 <img
-                    src={course.image_url || course.cover_url}
+                    src={course.image_url}
                     alt={course.title}
                     className="w-full h-40 object-cover"
                 />

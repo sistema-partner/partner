@@ -19,8 +19,7 @@ class Course extends Model
         'title',
         'code',
         'description',
-        'image_url', // Só isso!
-        'cover_url',
+        'image_url',
         'status',
         'visibility',
         'max_students',
@@ -36,8 +35,8 @@ class Course extends Model
         'max_students' => 'integer'
     ];
 
-    // REMOVA os appends - vamos usar image_url diretamente
-    // protected $appends = ['image_url', 'cover_url'];
+    protected $appends = ['modules_count', 'lessons_count'];
+
 
     public function teacher()
     {
@@ -130,6 +129,34 @@ class Course extends Model
             ->orderBy('usage_count', 'desc')
             ->orderBy('view_count', 'desc')
             ->get();
+    }
+
+    /**
+     * Número de módulos do curso (para cards e dashboards).
+     */
+    public function getModulesCountAttribute(): int
+    {
+        // Usa a relação carregada se já estiver em memória para evitar queries extras
+        if ($this->relationLoaded('modules')) {
+            return $this->modules->count();
+        }
+
+        return $this->modules()->count();
+    }
+
+    /**
+     * Número total de aulas/conteúdos do curso, somando os conteúdos dos módulos.
+     */
+    public function getLessonsCountAttribute(): int
+    {
+        if ($this->relationLoaded('modules')) {
+            return $this->modules->sum(function ($module) {
+                return $module->contents ? $module->contents->count() : 0;
+            });
+        }
+
+        // Fallback quando módulos não estão carregados: conta via relação de contents.
+        return $this->contents()->count();
     }
 
 }

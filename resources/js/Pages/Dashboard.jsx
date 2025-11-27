@@ -78,7 +78,7 @@ export default function Dashboard() {
                     <div className="mb-6">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">
+                                <h1 className="text-2xl font-bold text-white">
                                     Dashboard - {getRoleLabel(user.role)}
                                 </h1>
                                 {user.is_viewing_as_student && (

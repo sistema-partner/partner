@@ -4,8 +4,8 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import GlassCard from "@/Components/GlassCard";
 import { useState } from "react";
 import { ClipboardCopy, ClipboardCheck, Check, X } from "lucide-react";
-import InputLabel from '@/Components/InputLabel';
-import TagInput from '@/Components/TagInput'; 
+import InputLabel from "@/Components/InputLabel";
+import TagInput from "@/Components/TagInput";
 
 const AnnouncementForm = ({ course, contentTags }) => {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -38,7 +38,9 @@ const AnnouncementForm = ({ course, contentTags }) => {
                     id="content_tags"
                     options={contentTags}
                     value={data.tags}
-                    onChange={(selectedOptions) => setData('tags', selectedOptions)}
+                    onChange={(selectedOptions) =>
+                        setData("tags", selectedOptions)
+                    }
                 />
             </div>
             <div className="flex justify-end">
@@ -86,9 +88,8 @@ export default function Show({ auth, course, contentTags }) {
 
     // Formata diferença de tempo (simples)
     const formatRelative = (dateString) => {
-        if (!dateString) return "";
-        const date = new Date(dateString);
         const now = new Date();
+        const date = new Date(dateString);
         const diffMs = now - date;
         const mins = Math.floor(diffMs / 60000);
         const hours = Math.floor(diffMs / 3600000);
@@ -142,24 +143,14 @@ export default function Show({ auth, course, contentTags }) {
 
                     {/* Detalhes do Curso */}
                     <GlassCard>
-                        {(course.cover_url || course.image_url) && (
-                            // ... (código existente da imagem) ...
+                        {course.image_url && (
                             <div className="mb-6 -mt-2 -mx-2">
                                 <div className="rounded-lg overflow-hidden h-56 relative">
                                     <img
-                                        src={
-                                            course.cover_url || course.image_url
-                                        }
+                                        src={course.image_url}
                                         alt={course.title}
                                         className="w-full h-full object-cover"
                                     />
-                                    {course.image_url && course.cover_url && (
-                                        <img
-                                            src={course.image_url}
-                                            alt={course.title}
-                                            className="absolute bottom-4 left-4 h-16 w-16 object-cover rounded-lg ring-2 ring-white shadow-lg"
-                                        />
-                                    )}
                                 </div>
                             </div>
                         )}
@@ -219,8 +210,11 @@ export default function Show({ auth, course, contentTags }) {
 
                                 <div className="mt-2 flex flex-wrap gap-2">
                                     {course.tags && course.tags.length > 0 ? (
-                                        course.tags.map(tag => (
-                                            <span key={tag.id} className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">
+                                        course.tags.map((tag) => (
+                                            <span
+                                                key={tag.id}
+                                                className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300"
+                                            >
                                                 {tag.name}
                                             </span>
                                         ))
@@ -516,7 +510,10 @@ export default function Show({ auth, course, contentTags }) {
                         description="Envie comunicados rápidos para os alunos matriculados."
                     >
                         <div className="mb-6">
-                            <AnnouncementForm course={course} contentTags={contentTags} />
+                            <AnnouncementForm
+                                course={course}
+                                contentTags={contentTags}
+                            />
                         </div>
                         <div className="space-y-6">
                             {course.contents
@@ -542,9 +539,12 @@ export default function Show({ auth, course, contentTags }) {
                                         <p className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
                                             {content.body}
                                         </p>
-                                         <div className="mt-2 flex flex-wrap gap-2">
-                                            {content.tags?.map(tag => (
-                                                <span key={tag.id} className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                            {content.tags?.map((tag) => (
+                                                <span
+                                                    key={tag.id}
+                                                    className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground"
+                                                >
                                                     {tag.name}
                                                 </span>
                                             ))}

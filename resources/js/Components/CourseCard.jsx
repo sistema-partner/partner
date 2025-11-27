@@ -9,8 +9,7 @@ import {
     Eye,
 } from "lucide-react";
 
-const CourseCard = ({ course, onDelete, isTeacher = true }) => {
-    console.log(course)
+const CourseCard = ({ course, onDelete, isTeacher = true, viewMode }) => {
     const getStatusBadge = (status) => {
         const statusConfig = {
             planned: {
@@ -44,6 +43,8 @@ const CourseCard = ({ course, onDelete, isTeacher = true }) => {
         return "text-red-500";
     };
 
+    console.log("debug", course);
+
     return (
         <Link
             href={route("courses.show", course.id)}
@@ -57,7 +58,7 @@ const CourseCard = ({ course, onDelete, isTeacher = true }) => {
                         "/default-course-image.jpg"
                     }
                     alt={course.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-3 left-3">
                     {getStatusBadge(course.status)}
@@ -65,7 +66,7 @@ const CourseCard = ({ course, onDelete, isTeacher = true }) => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
 
                 {/* Overlay gradiente usando roxo da paleta */}
-                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-purple-dark/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-blue-dark/40 to-transparent" />
             </div>
 
             {/* Conteúdo do card */}

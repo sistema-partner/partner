@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
-import { X, Upload, Image as ImageIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Image as ImageIcon } from "lucide-react";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
+import { FileUpload } from "primereact/fileupload";
 
 export default function ImageUpload({
     label,
@@ -14,7 +15,6 @@ export default function ImageUpload({
 }) {
     const [preview, setPreview] = useState(null);
     const [dragging, setDragging] = useState(false);
-    const inputRef = useRef(null);
 
     useEffect(() => {
         // Se usuário selecionou novo arquivo
@@ -32,44 +32,22 @@ export default function ImageUpload({
         setPreview(null);
     }, [value, existingUrl]);
 
-    const handleFiles = (files) => {
-        if (!files || !files.length) return;
-        onChange(files[0]);
-    };
-
-    const onDrop = (e) => {
-        e.preventDefault();
-        setDragging(false);
-        handleFiles(e.dataTransfer.files);
-    };
-
-    const onDragOver = (e) => {
-        e.preventDefault();
-        if (!dragging) setDragging(true);
-    };
-
-    const onDragLeave = () => setDragging(false);
-
     const clearImage = () => {
         onChange(null);
         // Mantém existingUrl? Decidimos limpar preview completamente.
         setPreview(null);
-        if (inputRef.current) inputRef.current.value = "";
+        setDragging(false);
     };
 
     return (
         <div className="space-y-2">
             {label && <InputLabel htmlFor={name} value={label} />}
             <div
-                className={`relative group border-2 border-dashed rounded-xl p-4 transition-colors cursor-pointer flex flex-col items-center justify-center text-center min-h-[180px] overflow-hidden bg-white dark:bg-gray-800/70 backdrop-blur-sm ${
+                className={`relative group border-2 border-dashed rounded-xl p-4 transition-colors flex flex-col items-center justify-center text-center min-h-[180px] overflow-hidden bg-white dark:bg-gray-800/70 backdrop-blur-sm ${
                     dragging
                         ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10"
                         : "border-gray-300 dark:border-gray-600 hover:border-indigo-400"
                 } ${preview ? "pt-0" : ""}`}
-                onClick={() => inputRef.current?.click()}
-                onDrop={onDrop}
-                onDragOver={onDragOver}
-                onDragLeave={onDragLeave}
             >
                 {/* Preview */}
                 {preview && (
@@ -110,15 +88,28 @@ export default function ImageUpload({
                     </div>
                 )}
 
-                <input
-                    ref={inputRef}
-                    id={name}
-                    name={name}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleFiles(e.target.files)}
-                />
+                <div className="mt-3 w-full flex flex-col items-center">
+                    <FileUpload
+                        mode="basic"
+                        name={name}
+                        accept="image/*"
+                        maxFileSize={4 * 1024 * 1024}
+                        chooseLabel={
+                            preview ? "Trocar imagem" : "Selecionar imagem"
+                        }
+                        auto
+                        customUpload
+                        uploadHandler={(e) => {
+                            const file = e.files?.[0];
+                            if (file) {
+                                onChange(file);
+                                setDragging(false);
+                            }
+                        }}
+                        onClear={clearImage}
+                        className="p-fileupload-sm"
+                    />
+                </div>
 
                 {/* Overlay state */}
                 <div

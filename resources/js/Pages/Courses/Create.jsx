@@ -160,16 +160,6 @@ export default function Create({ auth }) {
                                         error={errors.image}
                                         helper="Usada como miniatura nas listagens."
                                     />
-                                    <ImageUpload
-                                        label="Imagem de Capa"
-                                        name="cover"
-                                        value={data.cover}
-                                        onChange={(file) =>
-                                            setData("cover", file)
-                                        }
-                                        error={errors.cover}
-                                        helper="Exibida no topo da página do curso."
-                                    />
                                 </div>
                                 {/* Título do Curso */}
                                 <div className="space-y-1">

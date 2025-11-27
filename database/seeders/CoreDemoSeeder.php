@@ -42,19 +42,16 @@ class CoreDemoSeeder extends Seeder
                 'title' => 'Laravel Básico', 
                 'description' => 'Fundamentos do framework Laravel.', 
                 'image_url' => 'https://edukits.com.br/wp-content/uploads/2025/08/Diseno-sin-titulo-4.png',
-                'cover_url' => 'https://edukits.com.br/wp-content/uploads/2025/08/Diseno-sin-titulo-4.png'
             ],
             [
                 'title' => 'React para Iniciantes',
                 'description' => 'Introdução ao desenvolvimento com React.',
                 'image_url' => 'https://devsagaz.com.br/content/images/2023/05/Ekran-Resmi-2019-11-18-18.08.13.png',
-                'cover_url' => 'https://devsagaz.com.br/content/images/2023/05/Ekran-Resmi-2019-11-18-18.08.13.png'
             ],
             [
                 'title' => 'Banco de Dados SQL',
                 'description' => 'Modelagem e consultas SQL.',
                 'image_url' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-mEvAE4fw8cnGg9sWw-_nT_DuGfrpuRKSMw&s',
-                'cover_url' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-mEvAE4fw8cnGg9sWw-_nT_DuGfrpuRKSMw&s'
             ],
         ])->map(function ($c) use ($teacher) {
             return Course::create([
@@ -65,7 +62,7 @@ class CoreDemoSeeder extends Seeder
                 'status' => 'active',
                 'visibility' => 'public',
                 'accepts_enrollments' => true,
-                'image_url' => $c['image_url'], // Só isso!
+                'image_url' => $c['image_url'],
             ]);
         });
 

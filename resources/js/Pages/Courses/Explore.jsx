@@ -3,14 +3,14 @@ import { Head, Link } from "@inertiajs/react";
 
 const CourseCard = ({ course }) => (
     <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105">
-        {(course.image_url || course.cover_url) && (
+        {(course.image_url ) && (
             <img
-                src={course.image_url || course.cover_url}
+                src={course.image_url}
                 alt={course.title}
                 className="w-full h-40 object-cover"
             />
         )}
-        {!(course.image_url || course.cover_url) && (
+        {!(course.image_url) && (
             <div className="w-full h-40 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-400 text-sm">
                 Sem imagem
             </div>

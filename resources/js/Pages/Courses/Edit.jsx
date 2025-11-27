@@ -6,7 +6,7 @@ import TextInput from "@/Components/TextInput";
 import ImageUpload from "@/Components/ImageUpload";
 import DateRange from "@/Components/DateRange";
 import { Head, useForm, Link } from "@inertiajs/react";
-import TagInput from '@/Components/TagInput';
+import TagInput from "@/Components/TagInput";
 
 export default function Edit({ auth, course, courseTags, allCourseTags }) {
     const formatDate = (dateString) => {
@@ -22,9 +22,7 @@ export default function Edit({ auth, course, courseTags, allCourseTags }) {
         end_date: formatDate(course.end_date),
         status: course.status || "",
         image: null, // novo arquivo apenas
-        cover: null, // novo arquivo apenas
         remove_image: false,
-        remove_cover: false,
         tags: courseTags || [],
     });
 
@@ -72,31 +70,6 @@ export default function Edit({ auth, course, courseTags, allCourseTags }) {
                                             className="text-xs text-red-600 hover:text-red-700"
                                         >
                                             Remover imagem atual
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="space-y-2">
-                                    <ImageUpload
-                                        label="Imagem de Capa"
-                                        name="cover"
-                                        value={data.cover}
-                                        existingUrl={course.cover_url}
-                                        onChange={(file) => {
-                                            setData("cover", file);
-                                            setData("remove_cover", false);
-                                        }}
-                                        error={errors.cover}
-                                        helper="Exibida como banner da página."
-                                    />
-                                    {course.cover_url && !data.cover && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setData("remove_cover", true);
-                                            }}
-                                            className="text-xs text-red-600 hover:text-red-700"
-                                        >
-                                            Remover capa atual
                                         </button>
                                     )}
                                 </div>
@@ -176,14 +149,22 @@ export default function Edit({ auth, course, courseTags, allCourseTags }) {
                                 <InputError message={errors.status} />
                             </div>
                             <div className="mt-4">
-                                <InputLabel htmlFor="tags" value="Tags do Curso" />
+                                <InputLabel
+                                    htmlFor="tags"
+                                    value="Tags do Curso"
+                                />
                                 <TagInput
                                     id="tags"
                                     options={allCourseTags}
                                     value={data.tags}
-                                    onChange={(selectedOptions) => setData('tags', selectedOptions)}
+                                    onChange={(selectedOptions) =>
+                                        setData("tags", selectedOptions)
+                                    }
                                 />
-                                <InputError message={errors.tags} className="mt-2" />
+                                <InputError
+                                    message={errors.tags}
+                                    className="mt-2"
+                                />
                             </div>
                             <div className="flex items-center justify-end mt-6">
                                 <Link
