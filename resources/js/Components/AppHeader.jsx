@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, router } from "@inertiajs/react";
+import Button from "@/Components/Button";
 import ThemeToggler from "@/Components/ThemeToggler";
 import Dropdown from "@/Components/Dropdown";
 import NavLink from "@/Components/NavLink";
@@ -413,18 +414,18 @@ export default function AppHeader({
                             </Link>
                         ) : (
                             <div className="flex items-center gap-4">
-                                <Link
+                                <Button
                                     href={route("login")}
-                                    className="inline-flex items-center px-4 py-2 bg-white border border-blue-primary rounded-md font-semibold text-xs text-blue-primary uppercase tracking-widest shadow-sm hover:bg-blue-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-primary focus:ring-offset-2 transition-colors duration-150 dark:bg-dark-card dark:border-blue-primary dark:text-white dark:hover:bg-blue-primary"
+                                    variant="secondary"
                                 >
                                     Entrar
-                                </Link>
-                                <Link
+                                </Button>
+                                <Button
                                     href={route("register")}
-                                    className="inline-flex items-center px-4 py-2 bg-blue-primary border border-blue-primary rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-white hover:text-blue-primary focus:outline-none focus:ring-2 focus:ring-blue-primary focus:ring-offset-2 transition-colors duration-150 dark:bg-blue-primary dark:border-blue-primary dark:text-white dark:hover:bg-dark-card dark:hover:text-white"
+                                    variant="primary"
                                 >
                                     Registrar
-                                </Link>
+                                </Button>
                             </div>
                         )}
                     </div>

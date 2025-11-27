@@ -52,10 +52,6 @@
   border-radius: 5px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
 .mapboxgl-popup-close-button {
   display: none !important;
 }
