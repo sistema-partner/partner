@@ -12,17 +12,15 @@ use App\Models\Content;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
-
 class Course extends Model
 {
-
     protected $fillable = [
         'teacher_id',
         'title',
         'code',
         'description',
-        'image_path',
-        'cover_path',
+        'image_url', // Só isso!
+        'cover_url',
         'status',
         'visibility',
         'max_students',
@@ -38,7 +36,8 @@ class Course extends Model
         'max_students' => 'integer'
     ];
 
-    protected $appends = ['image_url', 'cover_url'];
+    // REMOVA os appends - vamos usar image_url diretamente
+    // protected $appends = ['image_url', 'cover_url'];
 
     public function teacher()
     {
@@ -78,7 +77,6 @@ class Course extends Model
 
     public function canEnroll()
     {
-        // Permite matrícula se curso aceita matrículas e está ativo ou planejado
         return $this->accepts_enrollments &&
             in_array($this->status, ['active', 'planned']) &&
             ($this->max_students === null ||
@@ -132,16 +130,6 @@ class Course extends Model
             ->orderBy('usage_count', 'desc')
             ->orderBy('view_count', 'desc')
             ->get();
-    }
-
-    public function getImageUrlAttribute(): ?string
-    {
-        return $this->image_path ? asset('storage/' . $this->image_path) : null;
-    }
-
-    public function getCoverUrlAttribute(): ?string
-    {
-        return $this->cover_path ? asset('storage/' . $this->cover_path) : null;
     }
 
 }

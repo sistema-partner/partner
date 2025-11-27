@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 const CourseCard = ({ course, onDelete, isTeacher = true }) => {
+    console.log(course)
     const getStatusBadge = (status) => {
         const statusConfig = {
             planned: {
@@ -29,7 +30,7 @@ const CourseCard = ({ course, onDelete, isTeacher = true }) => {
         const config = statusConfig[status] || statusConfig.planned;
         return (
             <span
-                className={`px-2 py-1 rounded-full text-[0.7rem] font-medium ${config.class}`}
+                className={`px-2 py-1 rounded-full text-[0.8rem] font-medium ${config.class}`}
             >
                 {config.label}
             </span>
@@ -53,7 +54,6 @@ const CourseCard = ({ course, onDelete, isTeacher = true }) => {
                 <img
                     src={
                         course.image_url ||
-                        course.cover_url ||
                         "/default-course-image.jpg"
                     }
                     alt={course.title}
@@ -71,7 +71,7 @@ const CourseCard = ({ course, onDelete, isTeacher = true }) => {
             {/* Conteúdo do card */}
             <div className="p-4 min-h-[260px] flex flex-col">
                 {/* Título e descrição */}
-                <h3 className="font-bold text-xl text-gray-900 dark:text-dark-foreground line-clamp-2 mb-2 group-hover:text-blue-primary transition-colors">
+                <h3 className="font-bold text-xl text-gray-900 dark:text-dark-foreground line-clamp-2 mb-2 group-hover:text-purple-light transition-colors">
                     {course.title}
                 </h3>
                 <p className="text-gray-600 dark:text-dark-muted-foreground text-[0.95rem] line-clamp-2 mb-3">
@@ -187,7 +187,7 @@ const CourseCard = ({ course, onDelete, isTeacher = true }) => {
                                 <Link
                                     href={route("courses.edit", course.id)}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center gap-1 px-3 py-2 bg-green-success hover:bg-green-700 text-white text-[0.8rem] font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
+                                    className="inline-flex items-center gap-1 px-3 py-2 bg-blue-primary hover:bg-blue-dark text-white text-[0.8rem] font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
                                 >
                                     <Edit3 className="h-3 w-3" />
                                     Editar
