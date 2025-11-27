@@ -1,131 +1,117 @@
-import { useState, useEffect } from "react";
-import { X, Image as ImageIcon } from "lucide-react";
-import InputError from "@/Components/InputError";
-import InputLabel from "@/Components/InputLabel";
-import { FileUpload } from "primereact/fileupload";
+import { useState, useRef, useEffect } from "react";
+import { Upload, X, Loader2 } from "lucide-react";
 
-export default function ImageUpload({
-    label,
-    name,
-    value,
-    existingUrl = null, // URL já existente no servidor (não enviada para o backend como arquivo)
-    onChange,
-    error,
-    helper = null,
-}) {
+export default function ImageUpload({ value, onChange }) {
     const [preview, setPreview] = useState(null);
-    const [dragging, setDragging] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const inputRef = useRef(null);
 
+    // Atualiza preview quando um File chega via onChange
     useEffect(() => {
-        // Se usuário selecionou novo arquivo
         if (value instanceof File) {
-            const objectUrl = URL.createObjectURL(value);
-            setPreview(objectUrl);
-            return () => URL.revokeObjectURL(objectUrl);
+            const url = URL.createObjectURL(value);
+            setPreview(url);
+            return () => URL.revokeObjectURL(url);
         }
-        // Se não há novo arquivo, mas existe URL anterior
-        if (!value && existingUrl) {
-            setPreview(existingUrl);
-            return;
-        }
-        // Caso contrário limpa preview
-        setPreview(null);
-    }, [value, existingUrl]);
 
-    const clearImage = () => {
+        if (!value) setPreview(null);
+    }, [value]);
+
+    // Handler de seleção manual
+    const handleSelect = (e) => {
+        const file = e.target.files?.[0];
+        if (file) simulateUpload(file);
+    };
+
+    // Handler do Drop
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+
+        const file = e.dataTransfer.files?.[0];
+        if (file) simulateUpload(file);
+    };
+
+    const simulateUpload = (file) => {
+        setUploading(true);
+
+        setTimeout(() => {
+            onChange(file);
+            setUploading(false);
+        }, 800);
+    };
+
+    const removeImage = () => {
         onChange(null);
-        // Mantém existingUrl? Decidimos limpar preview completamente.
         setPreview(null);
-        setDragging(false);
     };
 
     return (
-        <div className="space-y-2">
-            {label && <InputLabel htmlFor={name} value={label} />}
+        <div className="w-full">
+            {/* Área principal */}
             <div
-                className={`relative group border-2 border-dashed rounded-xl p-4 transition-colors flex flex-col items-center justify-center text-center min-h-[180px] overflow-hidden bg-white dark:bg-gray-800/70 backdrop-blur-sm ${
-                    dragging
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10"
-                        : "border-gray-300 dark:border-gray-600 hover:border-indigo-400"
-                } ${preview ? "pt-0" : ""}`}
+                className={`
+                    border-2 border-dashed rounded-xl p-6 transition 
+                    flex flex-col items-center justify-center gap-3 cursor-pointer
+                    ${dragActive ? "border-blue-400 bg-blue-50/50" : "border-gray-300"}
+                `}
+                onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+                onDrop={handleDrop}
+                onClick={() => inputRef.current.click()}
             >
                 {/* Preview */}
-                {preview && (
-                    <div className="w-full h-40 rounded-md overflow-hidden mb-3 relative">
-                        <img
-                            src={preview}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                        />
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                clearImage();
-                            }}
-                            className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition"
-                            aria-label="Remover imagem"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
-                    </div>
-                )}
-
-                {!preview && (
-                    <div className="flex flex-col items-center justify-center py-6">
-                        <div className="h-14 w-14 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center mb-3 ring-1 ring-indigo-200 dark:ring-indigo-400/30">
-                            <ImageIcon className="h-7 w-7 text-indigo-600 dark:text-indigo-300" />
+                {preview && !uploading && (
+                    <div className="w-full">
+                        <div className="relative group">
+                            <img
+                                src={preview}
+                                className="w-full h-48 object-cover rounded-lg shadow-sm"
+                            />
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); removeImage(); }}
+                                className="
+                                    absolute top-2 right-2 p-1.5 rounded-full bg-white 
+                                    shadow hover:bg-gray-100 transition
+                                "
+                            >
+                                <X size={16} />
+                            </button>
                         </div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                            Arraste e solte uma imagem ou{" "}
-                            <span className="text-indigo-600 dark:text-indigo-400">
-                                clique para selecionar
-                            </span>
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Formatos suportados: JPG, PNG, WEBP. Máx 4MB.
-                        </p>
                     </div>
                 )}
 
-                <div className="mt-3 w-full flex flex-col items-center">
-                    <FileUpload
-                        mode="basic"
-                        name={name}
-                        accept="image/*"
-                        maxFileSize={4 * 1024 * 1024}
-                        chooseLabel={
-                            preview ? "Trocar imagem" : "Selecionar imagem"
-                        }
-                        auto
-                        customUpload
-                        uploadHandler={(e) => {
-                            const file = e.files?.[0];
-                            if (file) {
-                                onChange(file);
-                                setDragging(false);
-                            }
-                        }}
-                        onClear={clearImage}
-                        className="p-fileupload-sm"
-                    />
-                </div>
+                {/* Uploading State */}
+                {uploading && (
+                    <div className="flex flex-col items-center gap-2 py-6">
+                        <Loader2 className="animate-spin text-gray-500" size={28} />
+                        <p className="text-sm text-gray-600">Enviando…</p>
+                    </div>
+                )}
 
-                {/* Overlay state */}
-                <div
-                    className={`pointer-events-none absolute inset-0 rounded-xl transition ${
-                        dragging
-                            ? "ring-2 ring-indigo-400 dark:ring-indigo-300"
-                            : ""
-                    }`}
-                ></div>
+                {/* Estado vazio */}
+                {!preview && !uploading && (
+                    <>
+                        <Upload className="text-gray-400" size={32} />
+                        <p className="text-sm text-gray-600 text-center">
+                            Arraste uma imagem aqui ou clique para selecionar
+                        </p>
+                        <p className="text-xs text-gray-400">PNG, JPG, WEBP · Máx. 5MB</p>
+                    </>
+                )}
+
+                <input
+                    ref={inputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleSelect}
+                />
             </div>
-            {helper && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {helper}
-                </p>
-            )}
-            <InputError message={error} />
         </div>
     );
 }
