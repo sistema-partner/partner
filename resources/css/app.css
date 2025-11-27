@@ -3,136 +3,22 @@
 @tailwind utilities;
 
 @layer base {
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --datalabel: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 221 83% 53%; /* Azul similar ao blue-600 */
-    --primary-foreground: 0 0% 100%; /* Branco */
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --border-hover: 0 0% 78.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-  }
-
   :root {
-    @apply light;
     --header-height: 4rem;
   }
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --datalabel: 0 0% 80.9%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 221 83% 53%; /* Azul similar ao blue-600 */
-    --primary-foreground: 0 0% 100%; /* Branco */
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --border-hover: 0 0% 25.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-  }
-}
-
-@layer base {
   img {
     @apply inline-block;
   }
 
   * {
-    @apply border-border;
+    @apply border-light-border dark:border-dark-border;
   }
+  
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings:
-      'rlig' 1,
-      'calt' 1;
+    @apply bg-light-background text-light-foreground dark:bg-dark-background dark:text-dark-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
   }
-}
-
-@layer utilities {
-  .dark .bg-white {
-    @apply bg-card;
-  }
-
-  .dark .bg-gray-100 {
-    @apply bg-muted;
-  }
-
-  .dark .bg-gray-200 {
-    @apply bg-muted;
-  }
-
-  /* Text fix */
-  .dark .text-black {
-    @apply text-foreground;
-  }
-
-  .dark .text-gray-700,
-  .dark .text-gray-800,
-  .dark .text-gray-900 {
-    @apply text-muted-foreground;
-  }
-
-  .dark .text-white {
-    @apply text-foreground;
-  }
-
-  .dark .border-gray-200,
-  .dark .border-gray-300 {
-    @apply border-border;
-  }
-
-  .dark .bg-green-500 {
-    @apply bg-primary text-primary-foreground;
-  }
-
-  .dark .bg-red-500 {
-    @apply bg-destructive text-destructive-foreground;
-  }
-}
-
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
 }
 
 @layer utilities {
@@ -149,6 +35,25 @@
     width: var(--radix-popover-trigger-width);
     max-height: var(--radix-popover-content-available-height);
   }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-light-background dark:bg-dark-background;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .mapboxgl-popup-close-button {
