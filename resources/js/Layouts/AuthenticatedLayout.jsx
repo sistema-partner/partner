@@ -8,7 +8,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = auth.user;
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900">
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-90 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900">
             <AppHeader user={user} variant="auth" />
 
             {/* Header personalizado se necessário */}

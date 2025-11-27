@@ -40,7 +40,7 @@ export default {
                 dark: {
                   background: '#191F2A',
                   foreground: '#F9F9F9',
-                  card: '#202734',
+                  card: '#111727',
                   'card-foreground': '#F9F9F9',
                   primary: '#3551E3',
                   'primary-foreground': '#F9F9F9',
