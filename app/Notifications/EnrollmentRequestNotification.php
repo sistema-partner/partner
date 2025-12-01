@@ -41,7 +41,7 @@ class EnrollmentRequestNotification extends Notification // 👈 REMOVA "impleme
             ->subject('Nova Solicitação de Matrícula 📥')
             ->greeting('Olá ' . $notifiable->name . ',')
             ->line($this->enrollment->student->name . ' solicitou entrada no curso "' . $this->enrollment->course->title . '".')
-            ->action('Ver Solicitação', url('/courses/' . $this->enrollment->course->id . '/enrollments'))
+            ->action('Ver Solicitação', url('/courses/' . $this->enrollment->course->id))
             ->line('Obrigado por usar nossa plataforma!')
             ->salutation('Equipe ' . config('app.name'));
     }
