@@ -25,7 +25,7 @@ class EnrollmentApprovedNotification extends Notification implements ShouldQueue
             ->subject('🎉 Matrícula Aprovada - ' . $this->enrollment->course->title)
             ->greeting('Olá ' . $notifiable->name . '!')
             ->line('Sua solicitação de matrícula no curso **' . $this->enrollment->course->title . '** foi aprovada!')
-            ->action('Acessar Curso', url('/courses/' . $this->enrollment->course->id))
+            ->action('Acessar Curso', url('/courses/' . $this->enrollment->course->id . '/details'))
             ->line('O curso já está disponível na sua área de estudos.')
             ->salutation('Equipe ' . config('app.name'));
     }
@@ -39,7 +39,7 @@ class EnrollmentApprovedNotification extends Notification implements ShouldQueue
             'course_id' => $this->enrollment->course->id,
             'course_title' => $this->enrollment->course->title,
             'enrollment_id' => $this->enrollment->id,
-            'url' => '/courses/' . $this->enrollment->course->id,
+            'url' => '/courses/' . $this->enrollment->course->id . '/details',
         ];
     }
 }
