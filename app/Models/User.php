@@ -12,12 +12,20 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'role', 'status', 
-        'avatar', 'phone', 'bio', 'institution'
+        'name',
+        'email',
+        'password',
+        'role',
+        'status',
+        'avatar',
+        'phone',
+        'bio',
+        'institution'
     ];
 
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [
@@ -27,7 +35,9 @@ class User extends Authenticatable implements MustVerifyEmail
     // Relações
     public function taughtCourses()
     {
-        return $this->hasMany(Course::class, 'teacher_id');
+        // Inclui módulos para permitir cálculo eficiente de modules_count e lessons_count
+        return $this->hasMany(Course::class, 'teacher_id')
+            ->with('modules');
     }
 
     public function enrollments()

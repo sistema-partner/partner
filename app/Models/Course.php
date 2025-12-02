@@ -12,17 +12,14 @@ use App\Models\Content;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
-
 class Course extends Model
 {
-
     protected $fillable = [
         'teacher_id',
         'title',
         'code',
         'description',
-        'image_path',
-        'cover_path',
+        'image_url',
         'status',
         'visibility',
         'max_students',
@@ -38,7 +35,8 @@ class Course extends Model
         'max_students' => 'integer'
     ];
 
-    protected $appends = ['image_url', 'cover_url'];
+    protected $appends = ['modules_count', 'lessons_count'];
+
 
     public function teacher()
     {
@@ -78,7 +76,6 @@ class Course extends Model
 
     public function canEnroll()
     {
-        // Permite matrícula se curso aceita matrículas e está ativo ou planejado
         return $this->accepts_enrollments &&
             in_array($this->status, ['active', 'planned']) &&
             ($this->max_students === null ||
@@ -134,14 +131,32 @@ class Course extends Model
             ->get();
     }
 
-    public function getImageUrlAttribute(): ?string
+    /**
+     * Número de módulos do curso (para cards e dashboards).
+     */
+    public function getModulesCountAttribute(): int
     {
-        return $this->image_path ? asset('storage/' . $this->image_path) : null;
+        // Usa a relação carregada se já estiver em memória para evitar queries extras
+        if ($this->relationLoaded('modules')) {
+            return $this->modules->count();
+        }
+
+        return $this->modules()->count();
     }
 
-    public function getCoverUrlAttribute(): ?string
+    /**
+     * Número total de aulas/conteúdos do curso, somando os conteúdos dos módulos.
+     */
+    public function getLessonsCountAttribute(): int
     {
-        return $this->cover_path ? asset('storage/' . $this->cover_path) : null;
+        if ($this->relationLoaded('modules')) {
+            return $this->modules->sum(function ($module) {
+                return $module->contents ? $module->contents->count() : 0;
+            });
+        }
+
+        // Fallback quando módulos não estão carregados: conta via relação de contents.
+        return $this->contents()->count();
     }
 
 }

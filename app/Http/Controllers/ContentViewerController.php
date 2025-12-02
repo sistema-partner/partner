@@ -35,7 +35,12 @@ class ContentViewerController extends Controller
         return inertia('Contents/Show', [
             'auth' => ['user' => $user],
             'content' => $content,
-            'course' => $course->only(['id', 'title'])
+            'course' => [
+                'id' => $course->id,
+                'title' => $course->title,
+                'modules_count' => $course->modules_count,
+                'lessons_count' => $course->lessons_count,
+            ],
         ]);
     }
 }

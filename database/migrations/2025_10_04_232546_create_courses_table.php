@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('courses', function (Blueprint $table) {
@@ -17,7 +14,7 @@ return new class extends Migration
             $table->string('title', 255);
             $table->string('code', 20)->unique();
             $table->text('description')->nullable();
-            $table->string('image_url', 255)->nullable();
+            $table->string('image_url', 500)->nullable();
             $table->enum('status', ['active', 'planned', 'ended', 'cancelled'])->default('planned');
             $table->enum('visibility', ['public', 'private'])->default('public');
             $table->unsignedInteger('max_students')->nullable();
@@ -32,9 +29,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('courses');

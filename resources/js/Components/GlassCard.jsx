@@ -25,7 +25,7 @@ export default function GlassCard({
   const pad = paddingMap[padding] || paddingMap.md;
 
   return (
-    <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-sm rounded-xl ${pad} ${className}`}>
+    <div className={`bg-white/90 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-sm rounded-xl ${pad} ${className}`}>
       {(title || description) && (
         <div className="mb-5">
           {title && (

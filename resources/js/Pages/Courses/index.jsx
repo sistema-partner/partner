@@ -94,12 +94,10 @@ export default function Index({ auth, courses }) {
                                             >
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center gap-3">
-                                                        {(course.image_url ||
-                                                            course.cover_url) && (
+                                                        {(course.image_url) && (
                                                             <img
                                                                 src={
-                                                                    course.image_url ||
-                                                                    course.cover_url
+                                                                    course.image_url
                                                                 }
                                                                 alt={
                                                                     course.title
