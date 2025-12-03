@@ -25,7 +25,7 @@ const CourseCard = ({ course }) => (
             </p>
             <div className="mt-4 flex justify-end">
                 <Link
-                    href={route("courses.details", course.id)}
+                    href={route("courses.details", course.id) + '?origin=explore'}
                     className="text-sm font-semibold text-primary hover:underline"
                 >
                     Ver Detalhes &rarr;

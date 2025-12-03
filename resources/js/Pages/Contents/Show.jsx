@@ -19,7 +19,7 @@ export default function Show({ auth, content, course }) {
                             </p>
                         </div>
                         <Link
-                            href={route("courses.show", course.id)}
+                            href={route("courses.details", course.id)}
                             className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
                         >
                             Voltar ao Curso

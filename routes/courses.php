@@ -24,6 +24,14 @@ Route::middleware(['auth', 'verified', 'teacher'])->group(function () {
     Route::resource('courses', CourseController::class);
     Route::post('/courses/{course}/contents', [CourseContentController::class, 'store'])->name('courses.contents.store');
     Route::get('/contents/public', [\App\Http\Controllers\PublicContentController::class, 'index'])->name('contents.public');
+    Route::post('/courses/{course}/modules', [App\Http\Controllers\CourseModuleController::class, 'store'])->name('modules.store');
+    
+    Route::patch('/modules/{module}', [App\Http\Controllers\CourseModuleController::class, 'update'])->name('modules.update');
+    Route::delete('/modules/{module}', [App\Http\Controllers\CourseModuleController::class, 'destroy'])->name('modules.destroy');
+
+    Route::post('/modules/{module}/contents', [App\Http\Controllers\ModuleContentController::class, 'store'])->name('modules.contents.store');
+    Route::patch('/contents/{content}', [App\Http\Controllers\ModuleContentController::class, 'update'])->name('contents.update');
+    Route::delete('/modules/{module}/contents/{content}', [App\Http\Controllers\ModuleContentController::class, 'destroy'])->name('modules.contents.destroy');
 });
 
 // Visualização interna de conteúdo (qualquer usuário autenticado/verificado aprovado no curso ou autor)
