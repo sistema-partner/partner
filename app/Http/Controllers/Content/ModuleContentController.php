@@ -1,6 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Content;
+
+use App\Http\Controllers\Controller;
+
 
 use App\Models\CourseModule;
 use App\Models\Content;

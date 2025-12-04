@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Courses;
+use App\Http\Controllers\Controller;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class PublicCourseController extends Controller
+class CourseExploreController extends Controller
 {
     public function index()
     {

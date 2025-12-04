@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Courses;
 
+use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Enrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Notifications\EnrollmentRequestNotification;
 use App\Models\EnrollmentLog;
 
-class EnrollmentController extends Controller
+class CourseEnrollmentController extends Controller
 {
     public function enrollByCode(Request $request)
     {

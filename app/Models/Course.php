@@ -37,6 +37,8 @@ class Course extends Model
 
     protected $appends = ['modules_count', 'lessons_count'];
 
+    protected $with = ['teacher'];
+
 
     public function teacher()
     {

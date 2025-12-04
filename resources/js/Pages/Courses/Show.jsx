@@ -209,7 +209,7 @@ export default function Show({ auth, course, contentTags }) {
     const [moduleModal, setModuleModal] = useState({ show: false, module: null });
     const [selectContentModal, setSelectContentModal] = useState({ show: false, moduleId: null });
 
-    const isTeacher = auth.user.id === course.teacher_id;
+    const isTeacher = auth.user.id === course.teacher.id;
     const pendingEnrollments = course.enrollments?.filter(e => e.status === "pending") || [];
     const otherEnrollments = course.enrollments?.filter(e => e.status !== "pending") || [];
 
@@ -288,6 +288,8 @@ export default function Show({ auth, course, contentTags }) {
         ...(fromExplore ? [{ label: 'Explorar Cursos', href: route('courses.explore') }] : []),
         { label: course.title, href: null }
     ];
+
+    console.log(auth, course, contentTags);
 
     return (
         <AuthenticatedLayout user={auth.user}>
