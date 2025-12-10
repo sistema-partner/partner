@@ -76,12 +76,16 @@ class EnrollmentController extends Controller
             return back()->with('error', 'Você já solicitou ou está matriculado neste curso.');
         }
 
-        $enrollment = Enrollment::create([
-            'student_id' => $request->user()->id,
-            'course_id' => $course->id,
-            'status' => 'pending',
-            'requested_at' => now(),
-        ]);
+        $enrollment = Enrollment::updateOrCreate(
+            [
+                'student_id' => $request->user()->id,
+                'course_id' => $course->id,
+            ],
+            [
+                'status' => 'pending',
+                'requested_at' => now(),
+            ]
+        );
 
         EnrollmentLog::create([
             'enrollment_id' => $enrollment->id,
@@ -113,7 +117,7 @@ class EnrollmentController extends Controller
         }
 
         $enrollment->approve(Auth::id());
-        
+
         // notificar o estudante que a matrícula foi aprovada
         $enrollment->student->notify(new \App\Notifications\EnrollmentApprovedNotification($enrollment));
         return back()->with('success', 'Matrícula aprovada com sucesso.');
@@ -131,6 +135,7 @@ class EnrollmentController extends Controller
         $data = $request->validate(['reason' => 'nullable|string|max:255']);
 
         $enrollment->reject(Auth::id(), $data['reason'] ?? null);
+        $enrollment->student->notify(new \App\Notifications\EnrollmentRejectedNotification($enrollment));
 
         return back()->with('success', 'Matrícula rejeitada.');
     }
