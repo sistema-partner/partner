@@ -74,7 +74,7 @@ class EnrollmentController extends Controller
 
         if ($existingEnrollment) {
             return back()->with('error', 'Você já solicitou ou está matriculado neste curso.');
-        }
+        }   
 
         $enrollment = Enrollment::updateOrCreate(
             [
