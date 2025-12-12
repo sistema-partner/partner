@@ -12,7 +12,7 @@ import InputLabel from '@/Components/InputLabel';
 import TagInput from '@/Components/TagInput'; 
 import TextInput from '@/Components/TextInput';
 import Modal from '@/Components/Modal';
-import ContentSelectModal from '@/Components/ContentSelectModal'; 
+import ContentSelectModal from '@/Components/ContentSelectModal';
 
 const ModuleFormModal = ({ show, onClose, module = null, courseId }) => {
     const isEditing = !!module;

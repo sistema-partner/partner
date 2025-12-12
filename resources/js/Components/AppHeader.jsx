@@ -92,6 +92,7 @@ export default function AppHeader({
             }
         );
     };
+    console.log(user)
 
     // Marcar todas como lidas
     const markAllAsRead = () => {
