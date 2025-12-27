@@ -103,6 +103,7 @@ export default function Welcome({ auth }) {
                             iconColor="text-green-success dark:text-green-success"
                             title="Para Estudantes"
                             description="Acompanhe seu progresso, receba recomendações personalizadas e visualize suas metas de aprendizagem."
+                            borderHover="hover:border-green-dark dark:hover:border-green-success"
                             bullets={[
                                 {
                                     text: "Metas de aprendizagem personalizadas",
