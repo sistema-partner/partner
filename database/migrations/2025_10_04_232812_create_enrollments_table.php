@@ -13,23 +13,44 @@ return new class extends Migration
     {
         Schema::create('enrollments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('student_id');
-            $table->unsignedBigInteger('course_id');
-            $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
+
+            $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+
+            $table->enum('status', [
+                'pending',
+                'approved',
+                'rejected',
+                'cancelled'
+            ])->default('pending');
+
+            $table->enum('source', [
+                'self_enroll',
+                'invite',
+                'code'
+            ]);
+
+            $table->string('invite_code')->nullable();
+            $table->foreignId('invited_by')->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
             $table->timestamp('requested_at')->useCurrent();
             $table->timestamp('approved_at')->nullable();
-            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->foreignId('approved_by')->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
             $table->timestamp('cancelled_at')->nullable();
             $table->text('cancellation_reason')->nullable();
+
             $table->timestamps();
 
-            $table->foreign('student_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
-            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
-            $table->unique(['student_id', 'course_id'], 'unique_student_course');
-            $table->index('status', 'enrollments_status_index');
-            $table->index(['course_id', 'status'], 'enrollments_course_status_index');
+            $table->unique(['student_id', 'course_id']);
+            $table->index(['course_id', 'status']);
+            $table->index(['source', 'status']);
         });
+
     }
 
     /**

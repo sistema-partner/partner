@@ -10,23 +10,42 @@ return new class extends Migration
     {
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('teacher_id');
+            $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
+
             $table->string('title', 255);
             $table->string('code', 20)->unique();
             $table->text('description')->nullable();
             $table->string('image_url', 500)->nullable();
-            $table->enum('status', ['active', 'planned', 'ended', 'cancelled'])->default('planned');
-            $table->enum('visibility', ['public', 'private'])->default('public');
+
+            $table->enum('status', [
+                'planned',
+                'active',
+                'ended',
+                'cancelled'
+            ])->default('planned');
+
+            $table->enum('visibility', [
+                'public',
+                'unlisted',
+                'private'
+            ])->default('public');
+
+            $table->enum('enrollment_policy', [
+                'closed',
+                'auto_approve',
+                'manual_approval'
+            ])->default('manual_approval');
+
             $table->unsignedInteger('max_students')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->boolean('accepts_enrollments')->default(true);
+
             $table->timestamps();
 
-            $table->foreign('teacher_id')->references('id')->on('users')->onDelete('cascade');
-            $table->index(['teacher_id', 'status'], 'courses_teacher_status_index');
-            $table->index(['status', 'start_date', 'end_date'], 'courses_status_date_index');
+            $table->index(['teacher_id', 'status']);
+            $table->index(['visibility', 'status']);
         });
+
     }
 
     public function down(): void
