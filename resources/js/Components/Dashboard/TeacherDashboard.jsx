@@ -171,7 +171,7 @@ export default function TeacherDashboard({
                         </div>
 
                         <Link
-                            href={route("courses.create")}
+                            href={route("teacher.courses.create")}
                             className="inline-flex items-center gap-2 px-4 py-3 bg-blue-primary hover:bg-blue-dark text-white font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
                         >
                             <PlusCircle className="h-5 w-5" /> 
@@ -192,7 +192,7 @@ export default function TeacherDashboard({
                                 Crie seu primeiro curso para começar a gerenciar conteúdo e matrículas dos alunos.
                             </p>
                             <Link
-                                href={route("courses.create")}
+                                href={route("teacher.courses.create")}
                                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-primary hover:bg-blue-dark text-white font-semibold rounded-lg transition-colors"
                             >
                                 <PlusCircle className="h-5 w-5" /> 
@@ -253,7 +253,7 @@ export default function TeacherDashboard({
                     new Promise((resolve) => {
                         if (!courseToDelete) return resolve();
                         router.delete(
-                            route("courses.destroy", courseToDelete.id),
+                            route("teacher.courses.destroy", courseToDelete.id),
                             {
                                 preserveScroll: true,
                                 onSuccess: () => {

@@ -13,12 +13,16 @@ class Enrollment extends Model
         'student_id',
         'course_id',
         'status',
+        'source',
+        'invite_code',
+        'invited_by',
         'requested_at',
         'approved_at',
         'approved_by',
         'cancelled_at',
         'cancellation_reason'
     ];
+
 
     protected $casts = [
         'requested_at' => 'datetime',

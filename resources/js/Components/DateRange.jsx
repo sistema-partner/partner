@@ -19,7 +19,7 @@ export default function DateRange({
 
     const handleDateChange = (field, value) => {
         // Formata a data para YYYY-MM-DD antes de enviar
-        const formattedDate = value ? value.toISOString().split('T')[0] : '';
+        const formattedDate = value ? value.toISOString().split("T")[0] : "";
         onChange(field, formattedDate);
     };
 
@@ -36,8 +36,8 @@ export default function DateRange({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Data de Início */}
                 <div className="space-y-3">
-                    <InputLabel 
-                        htmlFor={startName} 
+                    <InputLabel
+                        htmlFor={startName}
                         value={labels.start}
                         className="text-sm font-semibold text-gray-700 dark:text-gray-300"
                     />
@@ -45,7 +45,9 @@ export default function DateRange({
                         <Calendar
                             id={startName}
                             value={formatDateForInput(startValue)}
-                            onChange={(e) => handleDateChange(startName, e.value)}
+                            onChange={(e) =>
+                                handleDateChange(startName, e.value)
+                            }
                             dateFormat="dd/mm/yy"
                             placeholder="Selecione a data"
                             showIcon
@@ -61,8 +63,8 @@ export default function DateRange({
 
                 {/* Data de Término */}
                 <div className="space-y-3">
-                    <InputLabel 
-                        htmlFor={endName} 
+                    <InputLabel
+                        htmlFor={endName}
                         value={labels.end}
                         className="text-sm font-semibold text-gray-700 dark:text-gray-300"
                     />
@@ -98,7 +100,9 @@ export default function DateRange({
                         <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400">
                             {startValue && (
                                 <span className="font-medium">
-                                    {new Date(startValue).toLocaleDateString('pt-BR')}
+                                    {new Date(startValue).toLocaleDateString(
+                                        "pt-BR"
+                                    )}
                                 </span>
                             )}
                             {startValue && endValue && (
@@ -106,12 +110,14 @@ export default function DateRange({
                             )}
                             {endValue && (
                                 <span className="font-medium">
-                                    {new Date(endValue).toLocaleDateString('pt-BR')}
+                                    {new Date(endValue).toLocaleDateString(
+                                        "pt-BR"
+                                    )}
                                 </span>
                             )}
                         </div>
                     </div>
-                    
+
                     {/* Barra de progresso visual */}
                     {startValue && endValue && (
                         <div className="mt-3">
@@ -120,9 +126,9 @@ export default function DateRange({
                                 <span>Término</span>
                             </div>
                             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                <div 
+                                <div
                                     className="h-full bg-gradient-to-r from-blue-primary to-purple-light rounded-full"
-                                    style={{ width: '100%' }}
+                                    style={{ width: "100%" }}
                                 />
                             </div>
                         </div>
@@ -131,10 +137,11 @@ export default function DateRange({
             )}
 
             {/* Mensagem quando apenas uma data está selecionada */}
-            {(startValue && !endValue) && (
+            {startValue && !endValue && (
                 <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                     <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                        ⚠️ Selecione a data de término para completar o período do curso.
+                        ⚠️ Selecione a data de término para completar o período
+                        do curso.
                     </p>
                 </div>
             )}

@@ -28,7 +28,7 @@ return new class extends Migration
                 'self_enroll',
                 'invite',
                 'code'
-            ]);
+            ])->default('self_enroll');
 
             $table->string('invite_code')->nullable();
             $table->foreignId('invited_by')->nullable()

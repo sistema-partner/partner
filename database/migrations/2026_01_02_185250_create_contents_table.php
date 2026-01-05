@@ -13,13 +13,44 @@ return new class extends Migration
     {
         Schema::create('contents', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['video', 'pdf', 'text', 'link']);
-            $table->string('title')->nullable();
-            $table->text('body')->nullable(); // texto ou link
-            $table->string('file_url')->nullable();
-            $table->unsignedInteger('duration_seconds')->nullable(); // vídeo
+
+            // autoria
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+
+            // metadados
+            $table->string('title');
+            $table->text('description')->nullable();
+
+            $table->enum('type', [
+                'video',
+                'pdf',
+                'document',
+                'link',
+                'text'
+            ]);
+
+            // dados específicos
+            $table->string('file_path')->nullable(); // pdf, document, video
+            $table->string('url')->nullable();       // video externo, link
+            $table->longText('content')->nullable(); // texto
+
+            $table->unsignedInteger('duration_minutes')->nullable();
+
+            // visibilidade
+            $table->boolean('is_public')->default(false);
+
+            // métricas (não derivadas)
+            $table->unsignedInteger('view_count')->default(0);
+
             $table->timestamps();
+
+            // índices
+            $table->index(['type', 'is_public']);
+            $table->index('user_id');
         });
+
     }
 
     /**

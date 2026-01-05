@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('code', 20)->unique();
             $table->text('description')->nullable();
             $table->string('image_url', 500)->nullable();
+            $table->boolean('accepts_enrollments')->default(true);
 
             $table->enum('status', [
                 'planned',

@@ -3,14 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use App\Models\Enrollment;
-use App\Models\CourseContent;
-use App\Models\CourseModule;
-use App\Models\Tag;
-use App\Models\Content;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Course extends Model
 {
@@ -20,83 +16,54 @@ class Course extends Model
         'code',
         'description',
         'image_url',
-        'status',
-        'visibility',
+        'status',              // planned | active | finished
+        'visibility',          // public | private | unlisted
+        'enrollment_policy',   // closed | auto | approval
         'max_students',
         'start_date',
         'end_date',
-        'accepts_enrollments'
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'accepts_enrollments' => 'boolean',
-        'max_students' => 'integer'
+        'start_date'   => 'date',
+        'end_date'     => 'date',
+        'max_students' => 'integer',
     ];
 
-    protected $appends = ['modules_count', 'lessons_count'];
+    protected $appends = [
+        'modules_count',
+        'units_count',
+    ];
 
     protected $with = ['teacher'];
 
+    /* ===========================
+     |  RELATIONSHIPS
+     =========================== */
 
-    public function teacher()
+    public function teacher(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    public function enrollments()
+    public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
     }
 
-    public function activeEnrollments()
+    public function approvedEnrollments(): HasMany
     {
-        return $this->hasMany(Enrollment::class)->where('status', 'approved');
+        return $this->enrollments()->where('status', 'approved');
     }
 
-    // Scopes
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'active');
-    }
-
-    public function scopeByTeacher($query, $teacherId)
-    {
-        return $query->where('teacher_id', $teacherId);
-    }
-
-    public function scopeAcceptsEnrollments($query)
-    {
-        return $query->where('accepts_enrollments', true);
-    }
-
-    public function isActive()
-    {
-        return $this->status === 'active';
-    }
-
-    public function canEnroll()
-    {
-        return $this->accepts_enrollments &&
-            in_array($this->status, ['active', 'planned']) &&
-            ($this->max_students === null ||
-                $this->activeEnrollments()->count() < $this->max_students);
-    }
-
-    public function contents()
-    {
-        return $this->hasMany(CourseContent::class)->latest();
-    }
-
-    public function students()
+    public function students(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'enrollments', 'course_id', 'student_id')
-            ->withPivot('status', 'approved_at')
+            ->withPivot(['status', 'approved_at'])
             ->withTimestamps();
     }
 
-    public function approvedStudents()
+    public function approvedStudents(): BelongsToMany
     {
         return $this->students()->wherePivot('status', 'approved');
     }
@@ -109,56 +76,89 @@ class Course extends Model
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable')
-            ->withPivot('weight', 'context')
+            ->withPivot(['weight', 'context'])
             ->withTimestamps();
     }
 
-    public function getMainTagsAttribute()
+    /* ===========================
+     |  SCOPES
+     =========================== */
+
+    public function scopeActive($query)
     {
-        return $this->tags()->wherePivot('weight', '>=', 0.7)->get();
+        return $query->where('status', 'active');
     }
 
-    public function recommendedContents()
+    public function scopeByTeacher($query, int $teacherId)
     {
-        $courseTags = $this->tags()->pluck('tags.id');
-
-        return Content::public()
-            ->whereHas('tags', function ($query) use ($courseTags) {
-                $query->whereIn('tags.id', $courseTags);
-            })
-            ->withHighRating(4.0)
-            ->withCount('modules')
-            ->orderBy('usage_count', 'desc')
-            ->orderBy('view_count', 'desc')
-            ->get();
+        return $query->where('teacher_id', $teacherId);
     }
 
-    /**
-     * Número de módulos do curso (para cards e dashboards).
-     */
+    public function scopePublic($query)
+    {
+        return $query->where('visibility', 'public');
+    }
+
+    /* ===========================
+     |  HELPERS / BUSINESS LOGIC
+     =========================== */
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    public function canAcceptEnrollments(): bool
+    {
+        if ($this->enrollment_policy === 'closed') {
+            return false;
+        }
+
+        if (!in_array($this->status, ['active', 'planned'])) {
+            return false;
+        }
+
+        if (
+            $this->max_students !== null &&
+            $this->approvedEnrollments()->count() >= $this->max_students
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function requiresApproval(): bool
+    {
+        return $this->enrollment_policy === 'approval';
+    }
+
+    public function isAutoEnroll(): bool
+    {
+        return $this->enrollment_policy === 'auto';
+    }
+
+    /* ===========================
+     |  ACCESSORS
+     =========================== */
+
     public function getModulesCountAttribute(): int
     {
-        // Usa a relação carregada se já estiver em memória para evitar queries extras
-        if ($this->relationLoaded('modules')) {
-            return $this->modules->count();
-        }
-
-        return $this->modules()->count();
+        return $this->relationLoaded('modules')
+            ? $this->modules->count()
+            : $this->modules()->count();
     }
 
-    /**
-     * Número total de aulas/conteúdos do curso, somando os conteúdos dos módulos.
-     */
-    public function getLessonsCountAttribute(): int
+    public function getUnitsCountAttribute(): int
     {
         if ($this->relationLoaded('modules')) {
-            return $this->modules->sum(function ($module) {
-                return $module->contents ? $module->contents->count() : 0;
-            });
+            return $this->modules->sum(
+                fn ($module) => $module->units?->count() ?? 0
+            );
         }
 
-        // Fallback quando módulos não estão carregados: conta via relação de contents.
-        return $this->contents()->count();
+        return ModuleUnit::whereHas('module', function ($q) {
+            $q->where('course_id', $this->id);
+        })->count();
     }
-
 }

@@ -61,7 +61,7 @@ class DashboardController extends Controller
 
             case 'teacher':
                 $data['taught_courses'] = $user->taughtCourses()
-                    ->withCount(['enrollments', 'activeEnrollments'])
+                    ->withCount(['enrollments', 'approvedEnrollments'])
                     ->get();
 
                 $data['pending_approvals'] = $user->taughtCourses()
