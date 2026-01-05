@@ -10,6 +10,11 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
+
+    protected $policies = [
+        Course::class => CoursePolicy::class,
+    ];
+
     public function register(): void
     {
         //

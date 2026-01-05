@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Courses\CourseExploreController;
 use App\Http\Controllers\Courses\CourseEnrollmentController;
 use App\Http\Controllers\Courses\CourseController;
-use App\Http\Controllers\Courses\CourseContentController;
 use App\Http\Controllers\Courses\CourseModuleController;
 use App\Http\Controllers\Content\ModuleContentController;
 use App\Http\Controllers\Content\ContentViewerController;
@@ -21,40 +20,60 @@ Route::middleware(['auth', 'professor.approved'])->group(function () {
 });
 
 // ---- ROTAS DO PROFESSOR (GESTÃO) ----
-Route::middleware(['auth', 'verified', 'teacher'])->prefix('teacher/courses')->name('teacher.courses.')->group(function () {
-    // CRUD
+Route::middleware(['auth', 'verified', 'teacher'])
+    ->prefix('teacher/courses')
+    ->name('teacher.courses.')
+    ->group(function () {
+
+    // LISTAGEM
     Route::get('/', [CourseController::class, 'index'])->name('index');
+
+    // CRIAÇÃO
     Route::get('/create', [CourseController::class, 'create'])->name('create');
     Route::post('/', [CourseController::class, 'store'])->name('store');
-    Route::get('/{course}/edit', [CourseController::class, 'edit'])->name('edit');
+
+    // VISÃO GERAL DO CURSO
+    Route::get('/{course}', [CourseController::class, 'show'])->name('show');
+
+    // 🔽 SUBTELAS (wizard-like)
+    Route::get('/{course}/about', [CourseController::class, 'about'])->name('about');
+    Route::get('/{course}/settings', [CourseController::class, 'settings'])->name('settings');
+    Route::get('/{course}/curriculum', [CourseController::class, 'curriculum'])->name('curriculum');
+    Route::get('/{course}/publish', [CourseController::class, 'publish'])->name('publish');
+
+    // UPDATE GERAL (usado pelas subtelas)
     Route::put('/{course}', [CourseController::class, 'update'])->name('update');
     Route::delete('/{course}', [CourseController::class, 'destroy'])->name('destroy');
-    
-    // Dashboard do curso (visão do professor)
-    Route::get('/{course}', [CourseController::class, 'show'])->name('show');
-    
-    // Conteúdos (avisos)
-    Route::post('/{course}/contents', [CourseContentController::class, 'store'])->name('contents.store');
-    
-    // Módulos
+
+    // 🔹 MÓDULOS
     Route::post('/{course}/modules', [CourseModuleController::class, 'store'])->name('modules.store');
     Route::patch('/modules/{module}', [CourseModuleController::class, 'update'])->name('modules.update');
     Route::delete('/modules/{module}', [CourseModuleController::class, 'destroy'])->name('modules.destroy');
 });
 
+
 // ---- ROTAS DE CONTEÚDO ----
 Route::middleware(['auth'])->group(function () {
-    // Conteúdo em módulos
-    Route::post('/modules/{module}/contents', [ModuleContentController::class, 'store'])->name('modules.contents.store');
-    Route::patch('/contents/{content}', [ModuleContentController::class, 'update'])->name('contents.update');
-    Route::delete('/modules/{module}/contents/{content}', [ModuleContentController::class, 'destroy'])->name('modules.contents.destroy');
-    
-    // Visualização
-    Route::get('/contents/{content}', [ContentViewerController::class, 'show'])->name('contents.show');
-    
-    // Conteúdo público
-    Route::get('/contents/public', [PublicContentController::class, 'index'])->name('contents.public');
+
+    // UNIDADES → CONTEÚDOS
+    Route::post('/units/{unit}/contents', [ModuleContentController::class, 'store'])
+        ->name('units.contents.store');
+
+    Route::patch('/unit-contents/{unitContent}', [ModuleContentController::class, 'update'])
+        ->name('unit-contents.update');
+
+    Route::delete('/unit-contents/{unitContent}', [ModuleContentController::class, 'destroy'])
+        ->name('unit-contents.destroy');
+
+    // VISUALIZAÇÃO
+    Route::get('/contents/{content}', [ContentViewerController::class, 'show'])
+        ->name('contents.show');
+
+    // CONTEÚDO PÚBLICO
+    Route::get('/contents/public', [PublicContentController::class, 'index'])
+        ->name('contents.public');
 });
+
 
 // ---- ADMINISTRAÇÃO DE MATRÍCULAS ----
 Route::middleware(['auth'])->prefix('enrollments')->name('enrollments.')->group(function () {

@@ -44,4 +44,9 @@ class CourseModule extends Model
     {
         return $this->contents()->where('is_public', true);
     }
+
+    public function units()
+    {
+        return $this->hasMany(ModuleUnit::class)->orderBy('order');
+    }
 }
