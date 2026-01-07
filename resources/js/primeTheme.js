@@ -1,17 +1,29 @@
-let currentTheme = null;
+// resources/js/utils/primeTheme.js
 
-export async function loadPrimeTheme(isDark) {
-    const theme = isDark
+let themeLink = null;
+
+function getThemeUrl(themeName) {
+    return new URL(
+        `../../node_modules/primereact/resources/themes/${themeName}/theme.css`,
+        import.meta.url
+    ).href;
+}
+
+export function loadPrimeTheme(isDark) {
+    const themeName = isDark
         ? 'lara-dark-blue'
         : 'lara-light-blue';
 
-    if (currentTheme === theme) return;
+    const themeUrl = getThemeUrl(themeName);
 
-    currentTheme = theme;
+    if (!themeLink) {
+        themeLink = document.createElement('link');
+        themeLink.rel = 'stylesheet';
+        themeLink.id = 'prime-theme';
+        document.head.appendChild(themeLink);
+    }
 
-    if (isDark) {
-        await import('primereact/resources/themes/lara-dark-blue/theme.css');
-    } else {
-        await import('primereact/resources/themes/lara-light-blue/theme.css');
+    if (themeLink.href !== themeUrl) {
+        themeLink.href = themeUrl;
     }
 }

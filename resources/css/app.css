@@ -55,3 +55,38 @@
 .mapboxgl-popup-close-button {
   display: none !important;
 }
+
+/* ===============================
+   PRIME REACT + TAILWIND FIX
+   =============================== */
+
+.p-component,
+.p-inputtext,
+.p-multiselect,
+.p-multiselect-panel {
+  font-family: inherit;
+}
+
+/* Input de busca do MultiSelect */
+
+
+/* Placeholder */
+.p-multiselect-filter::placeholder {
+  color: #9CA3AF;
+}
+
+
+
+
+/* Item selecionado */
+.p-multiselect-item.p-highlight {
+  background-color: theme('colors.blue.primary');
+  color: white;
+}
+
+/* Chips selecionados */
+.p-multiselect-token {
+  background-color: theme('colors.blue.primary');
+  color: white;
+}
+
