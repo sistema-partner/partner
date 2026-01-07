@@ -18,7 +18,7 @@ export default {
             colors: {
                 // Cores do modo light
                 light: {
-                  background: '#F9F9F9',
+                  background: '#DBEAFE',
                   foreground: '#191F2A',
                   card: '#FFFFFF',
                   'card-foreground': '#191F2A',

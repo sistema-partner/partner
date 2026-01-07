@@ -11,10 +11,10 @@
     @apply inline-block;
   }
 
-  * {
-    @apply border-light-border dark:border-dark-border;
-  }
-  
+:where(input, textarea, select, button) {
+  @apply border-light-border dark:border-dark-border;
+}
+
   body {
     @apply bg-light-background text-light-foreground dark:bg-dark-background dark:text-dark-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
@@ -60,28 +60,55 @@
    PRIME REACT + TAILWIND FIX
    =============================== */
 
-.p-component,
-.p-inputtext,
-.p-multiselect,
-.p-multiselect-panel {
+/* Base PrimeReact */
+.p-component {
   font-family: inherit;
 }
 
-/* Input de busca do MultiSelect */
+/* ===== MULTISELECT ===== */
 
+/* Container */
+.p-multiselect {
+  background-color: theme('colors.light.card');
+  color: theme('colors.light.foreground');
+}
+
+.dark .p-multiselect {
+  background-color: theme('colors.dark.card');
+  color: theme('colors.dark.foreground');
+}
+
+/* Painel dropdown */
+.p-multiselect-panel {
+  background-color: theme('colors.light.card');
+  color: theme('colors.light.foreground');
+}
+
+.dark .p-multiselect-panel {
+  background-color: theme('colors.dark.card');
+  color: theme('colors.dark.foreground');
+}
+
+/* 🔥 INPUT DE BUSCA (o culpado) */
+.p-multiselect-filter {
+  background-color: theme('colors.light.background');
+  color: theme('colors.light.foreground');
+  border: 1px solid theme('colors.light.border');
+}
+
+.dark .p-multiselect-filter {
+  background-color: theme('colors.dark.background');
+  color: theme('colors.dark.foreground');
+  border: 1px solid theme('colors.dark.border');
+}
 
 /* Placeholder */
 .p-multiselect-filter::placeholder {
-  color: #9CA3AF;
+  color: theme('colors.light.muted-foreground');
 }
 
-
-
-
-/* Item selecionado */
-.p-multiselect-item.p-highlight {
-  background-color: theme('colors.blue.primary');
-  color: white;
+.dark .p-multiselect-filter::placeholder {
+  color: theme('colors.dark.muted-foreground');
 }
 
 /* Chips selecionados */
@@ -90,3 +117,11 @@
   color: white;
 }
 
+/* Item hover */
+.p-multiselect-item:hover {
+  background-color: theme('colors.light.muted');
+}
+
+.dark .p-multiselect-item:hover {
+  background-color: theme('colors.dark.muted');
+}

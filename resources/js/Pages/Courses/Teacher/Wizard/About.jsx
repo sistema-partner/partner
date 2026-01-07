@@ -55,8 +55,7 @@ export default function About({ auth, course, tags }) {
                         />
                         <InputError message={errors.description} />
                     </div>
-                    <div className="primereact-wrapper">
-
+                    <div className="primereact-wrapper border-solid border-gray-500">
                         <MultiSelect
                             value={data?.tags}
                             onChange={(e) => setData('tags', e.value)}
@@ -66,8 +65,13 @@ export default function About({ auth, course, tags }) {
                             filterDelay={400}
                             placeholder="Filtrar tags"
                             maxSelectedLabels={5}
-                            className="w-full md:w-20rem "
-                        />
+                            className="w-full"
+                            pt={{
+                                root: {
+                                    className: 'border border-light-border dark:border-dark-border rounded-lg'
+                                }
+                            }}
+/>
                     </div>
 
                     <ImageUpload
