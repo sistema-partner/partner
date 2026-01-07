@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('module_units', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('module_id');
+            $table->unsignedBigInteger('course_module_id');
             $table->string('title');
             $table->text('description')->nullable();
             $table->enum('type', [
@@ -26,8 +26,8 @@ return new class extends Migration
             $table->boolean('is_optional')->default(false);
             $table->timestamps();
 
-            $table->foreign('module_id')->references('id')->on('course_modules')->onDelete('cascade');
-            $table->unique(['module_id', 'order']);
+            $table->foreign('course_module_id')->references('id')->on('course_modules')->onDelete('cascade');
+            $table->unique(['course_module_id', 'order']);
         });
 
     }

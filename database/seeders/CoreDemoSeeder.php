@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Tag;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
@@ -112,7 +113,7 @@ class CoreDemoSeeder extends Seeder
                 for ($u = 1; $u <= 2; $u++) {
 
                     $unit = ModuleUnit::create([
-                        'module_id' => $module->id,
+                        'course_module_id' => $module->id,
                         'title' => "Unidade $u do Módulo $i",
                         'description' => "Materiais da unidade $u do módulo $i",
                         'type' => 'lesson',
@@ -162,13 +163,137 @@ class CoreDemoSeeder extends Seeder
                      ------------------------- */
 
                     UnitContent::insert([
-                        ['unit_id' => $unit->id, 'content_id' => $text->id,  'order' => 1],
-                        ['unit_id' => $unit->id, 'content_id' => $link->id,  'order' => 2],
-                        ['unit_id' => $unit->id, 'content_id' => $pdf->id,   'order' => 3],
-                        ['unit_id' => $unit->id, 'content_id' => $video->id, 'order' => 4],
+                        ['module_unit_id' => $unit->id, 'content_id' => $text->id,  'order' => 1],
+                        ['module_unit_id' => $unit->id, 'content_id' => $link->id,  'order' => 2],
+                        ['module_unit_id' => $unit->id, 'content_id' => $pdf->id,   'order' => 3],
+                        ['module_unit_id' => $unit->id, 'content_id' => $video->id, 'order' => 4],
                     ]);
                 }
             }
         });
+
+Tag::insert([
+    // ===== LEVEL =====
+    [
+        'name' => 'Iniciante',
+        'slug' => 'iniciante',
+        'type' => 'level',
+    ],
+    [
+        'name' => 'Intermediário',
+        'slug' => 'intermediario',
+        'type' => 'level',
+    ],
+    [
+        'name' => 'Avançado',
+        'slug' => 'avancado',
+        'type' => 'level',
+    ],
+
+    // ===== AUDIENCE =====
+    [
+        'name' => 'Estudantes',
+        'slug' => 'estudantes',
+        'type' => 'audience',
+    ],
+    [
+        'name' => 'Profissionais',
+        'slug' => 'profissionais',
+        'type' => 'audience',
+    ],
+    [
+        'name' => 'Iniciantes em Programação',
+        'slug' => 'iniciantes-programacao',
+        'type' => 'audience',
+    ],
+
+    // ===== SKILLS =====
+    [
+        'name' => 'Lógica de Programação',
+        'slug' => 'logica-de-programacao',
+        'type' => 'skill',
+    ],
+    [
+        'name' => 'Orientação a Objetos',
+        'slug' => 'orientacao-a-objetos',
+        'type' => 'skill',
+    ],
+    [
+        'name' => 'Desenvolvimento Web',
+        'slug' => 'desenvolvimento-web',
+        'type' => 'skill',
+    ],
+    [
+        'name' => 'Backend',
+        'slug' => 'backend',
+        'type' => 'skill',
+    ],
+    [
+        'name' => 'Frontend',
+        'slug' => 'frontend',
+        'type' => 'skill',
+    ],
+
+    // ===== TOOLS =====
+    [
+        'name' => 'PHP',
+        'slug' => 'php',
+        'type' => 'tool',
+    ],
+    [
+        'name' => 'Laravel',
+        'slug' => 'laravel',
+        'type' => 'tool',
+    ],
+    [
+        'name' => 'JavaScript',
+        'slug' => 'javascript',
+        'type' => 'tool',
+    ],
+    [
+        'name' => 'React',
+        'slug' => 'react',
+        'type' => 'tool',
+    ],
+    [
+        'name' => 'Python',
+        'slug' => 'python',
+        'type' => 'tool',
+    ],
+    [
+        'name' => 'Git',
+        'slug' => 'git',
+        'type' => 'tool',
+    ],
+
+    // ===== TOPICS =====
+    [
+        'name' => 'Programação',
+        'slug' => 'programacao',
+        'type' => 'topic',
+    ],
+    [
+        'name' => 'Algoritmos',
+        'slug' => 'algoritmos',
+        'type' => 'topic',
+    ],
+    [
+        'name' => 'Estruturas de Dados',
+        'slug' => 'estruturas-de-dados',
+        'type' => 'topic',
+    ],
+    [
+        'name' => 'APIs REST',
+        'slug' => 'apis-rest',
+        'type' => 'topic',
+    ],
+    [
+        'name' => 'Banco de Dados',
+        'slug' => 'banco-de-dados',
+        'type' => 'topic',
+    ],
+]);
+
+
     }
 }

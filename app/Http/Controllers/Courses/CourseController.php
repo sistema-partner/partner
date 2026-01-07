@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
+use App\Models\Tag;
 
 class CourseController extends Controller
 {
@@ -19,7 +21,13 @@ class CourseController extends Controller
 
     public function create()
     {
-        return Inertia::render('Courses/Teacher/Create');
+        return Inertia::render('Courses/Teacher/Create', [
+            'defaults' => [
+                'visibility' => 'private',
+                'enrollment_policy' => 'approval',
+                'status' => 'planned',
+            ],
+        ]);
     }
 
     private function resolveStatus(array $data): string
@@ -36,39 +44,60 @@ class CourseController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'tags' => ['nullable', 'array'],
-            'tags.*' => ['string', 'max:50'],
-
-            'visibility' => ['required', 'in:public,private,unlisted'],
-
-            'start_date' => ['nullable', 'date'],
-            'enrollment_policy' => ['required', 'in:closed,auto,approval'],
-
-            'enrollment_methods' => ['nullable', 'array'],
-            'enrollment_methods.*' => ['in:link,code'],
         ]);
 
         $course = Course::create([
             'teacher_id' => auth()->id(),
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'visibility' => $data['visibility'],
-            'start_date' => $data['start_date'] ?? null,
-            'enrollment_policy' => $data['enrollment_policy'],
-            'status' => $this->resolveStatus($data),
+            'title' => $request->title,
+            'status' => 'planned',
+            'visibility' => 'private',
+            'code' => strtoupper(Str::random(8)),
         ]);
 
-        if (!empty($data['tags'])) {
-            $course->syncTags($data['tags']); // se usar spatie/tags
-        }
-
-        return Redirect::route('teacher.courses.edit', $course)
-            ->with('success', 'Curso criado com sucesso!');
+        return redirect()->route('teacher.courses.about', $course);
     }
 
+    public function about(Course $course)
+    {
+        Gate::authorize('update', $course);
+        $tags = Tag::orderBy('usage_count', 'desc')
+                ->get(['id', 'name', 'type']);
+
+
+        return Inertia::render('Courses/Teacher/Wizard/About', [
+            'course' => $course->only([
+                'id',
+                'title',
+                'description',
+                'image_url',
+            ]),
+            'tags' => $tags
+        ]);
+    }
+
+    public function update(Request $request, Course $course)
+    {
+        Gate::authorize('update', $course);
+
+        $validated = $request->validate([
+            'title'       => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'image'       => ['nullable', 'image', 'max:2048'],
+        ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('courses', 'public');
+            $validated['image_url'] = $path;
+        }
+
+        $course->update($validated);
+
+        return redirect()
+            ->route('teacher.courses.settings', $course)
+            ->with('success', 'Informações do curso salvas');
+    }
 
     public function show(Course $course)
     {
@@ -80,12 +109,6 @@ class CourseController extends Controller
     {
         // Lógica de edição (manter do seu código atual)
     }
-
-    public function update(Request $request, Course $course)
-    {
-        // Lógica de atualização (manter do seu código atual)
-    }
-
     public function destroy(Course $course)
     {
         // Lógica de exclusão (manter do seu código atual)
