@@ -55,3 +55,56 @@
 .mapboxgl-popup-close-button {
   display: none !important;
 }
+
+/* ===============================
+   PRIME REACT + TAILWIND FIX
+   =============================== */
+
+.p-component,
+.p-inputtext,
+.p-multiselect,
+.p-multiselect-panel {
+  font-family: inherit;
+}
+
+/* Input de busca do MultiSelect */
+.p-multiselect-filter {
+  background-color: theme('colors.dark.background');
+  color: theme('colors.dark.foreground');
+  border: 1px solid theme('colors.dark.border');
+}
+
+/* Placeholder */
+.p-multiselect-filter::placeholder {
+  color: #9CA3AF;
+}
+
+/* Lista de opções */
+.p-multiselect-panel {
+  background-color: theme('colors.dark.card');
+  color: theme('colors.dark.foreground');
+  border: 1px solid theme('colors.dark.border');
+}
+
+/* Item normal */
+.p-multiselect-item {
+  color: theme('colors.dark.foreground');
+}
+
+/* Item selecionado */
+.p-multiselect-item.p-highlight {
+  background-color: theme('colors.blue.primary');
+  color: white;
+}
+
+/* Chips selecionados */
+.p-multiselect-token {
+  background-color: theme('colors.blue.primary');
+  color: white;
+}
+
+/* Remove white background for Tailwind forms */
+.p-inputtext,
+.p-multiselect-filter {
+  @apply bg-dark-background text-dark-foreground;
+}
