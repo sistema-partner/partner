@@ -1,15 +1,24 @@
 import "../css/app.css";
 import "./bootstrap";
-import 'primereact/resources/themes/lara-dark-blue/theme.css';
+
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
 import { createInertiaApp } from "@inertiajs/react";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { createRoot } from "react-dom/client";
-import { ThemeProvider } from "next-themes";
+
+import { getTheme, setTheme } from './theme';
+import { loadPrimeTheme } from './primeTheme';
 
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
+
+// aplica tema ANTES do render
+const theme = getTheme();
+const isDark = theme === 'dark';
+
+setTheme(theme);
+await loadPrimeTheme(isDark);
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -19,15 +28,6 @@ createInertiaApp({
             import.meta.glob("./Pages/**/*.jsx")
         ),
     setup({ el, App, props }) {
-        const root = createRoot(el);
-
-        root.render(
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                <App {...props} />
-            </ThemeProvider>
-        );
-    },
-    progress: {
-        color: "#4B5563",
+        createRoot(el).render(<App {...props} />);
     },
 });
