@@ -36,6 +36,41 @@ const CourseCard = ({ course, onDelete, isTeacher = true, viewMode }) => {
         );
     };
 
+    const getSetupStatusBadge = (setupStep) => {
+        const setupConfig = {
+            about: {
+                label: "Em criação - Informações",
+                class: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                icon: "pi-pencil",
+            },
+            settings: {
+                label: "Em criação - Configurações",
+                class: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                icon: "pi-cog",
+            },
+            curriculum: {
+                label: "Pronto para publicação",
+                class: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+                icon: "pi-star-fill",
+            },
+            completed: {
+                label: "Pronto",
+                class: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                icon: "pi-check",
+            },
+        };
+
+        const config = setupConfig[setupStep] || setupConfig.about;
+        return (
+            <span
+                className={`px-2 py-1 rounded-full text-[0.8rem] font-medium ${config.class} flex items-center gap-1`}
+            >
+                <i className={`pi ${config.icon}`}></i>
+                {config.label}
+            </span>
+        );
+    };
+
     const getRatingColor = (rating) => {
         if (rating >= 4.5) return "text-green-success";
         if (rating >= 4.0) return "text-yellow-500";
@@ -115,7 +150,12 @@ const CourseCard = ({ course, onDelete, isTeacher = true, viewMode }) => {
                         )}
                     </div>
 
-                    {/* Progresso (para alunos) ou estatísticas (para professores) */}
+                    {/* Status badges */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                        {isTeacher &&
+                            course.setup_step &&
+                            getSetupStatusBadge(course.setup_step)}
+                    </div>
                     {!isTeacher && course.progress !== undefined && (
                         <div className="mb-3">
                             <div className="flex justify-between text-[0.75rem] text-gray-500 dark:text-dark-muted-foreground mb-1">
@@ -198,7 +238,12 @@ const CourseCard = ({ course, onDelete, isTeacher = true, viewMode }) => {
                                 </Link>
                             </div>
                             <button
-                                onClick={() => onDelete(course)}
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onDelete(course);
+                                }}
                                 className="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-[0.8rem] font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
                             >
                                 <Trash2 className="h-3 w-3" />

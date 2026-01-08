@@ -13,6 +13,7 @@ use App\Models\Tag;
 use Illuminate\Support\Facades\DB;
 use App\Models\ModuleUnit;
 use App\Models\CourseModule;
+use Illuminate\Support\Facades\Validator;
 
 class CourseController extends Controller
 {
@@ -96,6 +97,9 @@ class CourseController extends Controller
             $validated['image_url'] = $path;
         }
 
+        // Marcar que completou a etapa "about"
+        $validated['setup_step'] = 'settings';
+
         $course->update($validated);
 
         // Sincronizar tags - extrair apenas IDs se forem objetos
@@ -135,6 +139,9 @@ class CourseController extends Controller
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
+        // Marcar que completou a etapa "settings"
+        $validated['setup_step'] = 'curriculum';
+
         $course->update($validated);
 
         return redirect()
@@ -146,23 +153,41 @@ class CourseController extends Controller
     {
         Gate::authorize('update', $course);
 
-        $data = $request->validate([
-            'modules' => 'required|array',
-            'modules.*.id' => 'nullable|integer',
-            'modules.*.title' => 'required|string|max:255',
-            'modules.*.description' => 'nullable|string',
+        // Filtrar módulos vazios antes da validação
+        $allModules = $request->input('modules', []);
+        $modulesData = collect($allModules)
+            ->filter(fn($m) => !empty(trim($m['title'] ?? '')))
+            ->values()
+            ->all();
 
-            'modules.*.units' => 'array',
-            'modules.*.units.*.id' => 'nullable|integer',
-            'modules.*.units.*.title' => 'nullable|string|max:255',
-            'modules.*.units.*.type' => 'nullable|in:lesson,quiz,project,code_exercise',
-            'modules.*.units.*.is_optional' => 'boolean',
-        ]);
+        // Se não há módulos válidos, retornar erro
+        if (empty($modulesData)) {
+            return back()->withErrors(['modules' => 'Você deve adicionar pelo menos um módulo com título.']);
+        }
 
-        DB::transaction(function () use ($data, $course) {
+        // Validar apenas os módulos filtrados
+        $validated = Validator::make(
+            ['modules' => $modulesData],
+            [
+                'modules' => 'required|array|min:1',
+                'modules.*.id' => 'nullable|integer',
+                'modules.*.title' => 'required|string|max:255',
+                'modules.*.description' => 'nullable|string',
+                'modules.*.units' => 'array',
+                'modules.*.units.*.id' => 'nullable|integer',
+                'modules.*.units.*.title' => 'nullable|string|max:255',
+                'modules.*.units.*.type' => 'nullable|in:lesson,quiz,project,code_exercise',
+                'modules.*.units.*.is_optional' => 'boolean',
+            ]
+        )->validate();
+
+        // Usar dados filtrados para processamento
+        $validated['modules'] = $modulesData;
+
+        DB::transaction(function () use ($validated, $course) {
             $moduleIds = [];
 
-            foreach ($data['modules'] as $moduleData) {
+            foreach ($validated['modules'] as $moduleData) {
                 // Valida se o módulo pertence ao curso
                 if (!empty($moduleData['id'])) {
                     $existingModule = CourseModule::where('id', $moduleData['id'])
@@ -246,6 +271,9 @@ class CourseController extends Controller
             CourseModule::where('course_id', $course->id)
                 ->whereNotIn('id', $moduleIds)
                 ->delete();
+
+            // Marcar que completou a etapa "curriculum"
+            $course->update(['setup_step' => 'completed']);
         });
 
         return back();
@@ -319,8 +347,22 @@ class CourseController extends Controller
     {
         // Lógica de edição (manter do seu código atual)
     }
+
     public function destroy(Course $course)
     {
-        // Lógica de exclusão (manter do seu código atual)
+        Gate::authorize('delete', $course);
+
+        // Deletar os módulos e suas unidades (cascata)
+        $course->modules()->each(function ($module) {
+            $module->units()->delete();
+            $module->delete();
+        });
+
+        // Deletar o curso
+        $course->delete();
+
+        return redirect()
+            ->route('teacher.dashboard')
+            ->with('success', 'Curso excluído com sucesso.');
     }
 }

@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, useForm, Link } from "@inertiajs/react";
+import { Head, useForm, Link, router } from "@inertiajs/react";
 import PrimaryButton from "@/Components/PrimaryButton";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
@@ -45,6 +45,16 @@ export default function About({ auth, course, tags }) {
                 forceFormData: true,
             }
         );
+    }
+
+    function handleCancel() {
+        // Deletar o curso ao cancelar
+        router.delete(route("teacher.courses.destroy", course.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.visit(route("teacher.dashboard"));
+            },
+        });
     }
 
     return (
@@ -122,12 +132,14 @@ export default function About({ auth, course, tags }) {
                     />
 
                     <div className="flex justify-between">
-                        <Link
-                            href={route("teacher.courses.index")}
-                            className="text-gray-500"
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center justify-center gap-2 font-medium"
                         >
-                            Cancelar
-                        </Link>
+                            <i className="pi pi-trash"></i>
+                            Cancelar e Deletar
+                        </button>
 
                         <PrimaryButton disabled={processing}>
                             Salvar e continuar

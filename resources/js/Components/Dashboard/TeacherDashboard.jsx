@@ -22,7 +22,7 @@ export default function TeacherDashboard({
 }) {
     const [courseToDelete, setCourseToDelete] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
 
     const totalStudents = taughtCourses.reduce(
         (total, course) => total + course.active_enrollments_count,
@@ -57,7 +57,8 @@ export default function TeacherDashboard({
             icon: Users,
             iconColor: "text-green-success",
             iconBg: "bg-green-100 dark:bg-green-success/20",
-            gradient: "from-green-success/10 via-green-success/5 to-transparent",
+            gradient:
+                "from-green-success/10 via-green-success/5 to-transparent",
             ring: "ring-green-success/30",
         },
     ];
@@ -65,6 +66,27 @@ export default function TeacherDashboard({
     const handleDeleteCourse = (course) => {
         setCourseToDelete(course);
         setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        return new Promise((resolve) => {
+            if (!courseToDelete) {
+                resolve();
+                return;
+            }
+
+            router.delete(route("teacher.courses.destroy", courseToDelete.id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowDeleteModal(false);
+                    setCourseToDelete(null);
+                },
+                onError: () => {
+                    // Mantém o modal aberto se houver erro
+                },
+                onFinish: () => resolve(),
+            });
+        });
     };
 
     return (
@@ -137,33 +159,33 @@ export default function TeacherDashboard({
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                            <BookOpen className="h-6 w-6 text-blue-primary" /> 
+                            <BookOpen className="h-6 w-6 text-blue-primary" />
                             Meus Cursos
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
                             Gerencie e acompanhe o desempenho dos seus cursos
                         </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                         {/* Toggle de visualização */}
                         <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                             <button
-                                onClick={() => setViewMode('grid')}
+                                onClick={() => setViewMode("grid")}
                                 className={`p-2 rounded-md transition-colors ${
-                                    viewMode === 'grid' 
-                                        ? 'bg-white dark:bg-gray-700 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                    viewMode === "grid"
+                                        ? "bg-white dark:bg-gray-700 shadow-sm"
+                                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                                 }`}
                             >
                                 <Grid3X3 className="h-4 w-4" />
                             </button>
                             <button
-                                onClick={() => setViewMode('list')}
+                                onClick={() => setViewMode("list")}
                                 className={`p-2 rounded-md transition-colors ${
-                                    viewMode === 'list' 
-                                        ? 'bg-white dark:bg-gray-700 shadow-sm' 
-                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                    viewMode === "list"
+                                        ? "bg-white dark:bg-gray-700 shadow-sm"
+                                        : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                                 }`}
                             >
                                 <List className="h-4 w-4" />
@@ -174,7 +196,7 @@ export default function TeacherDashboard({
                             href={route("teacher.courses.create")}
                             className="inline-flex items-center gap-2 px-4 py-3 bg-blue-primary hover:bg-blue-dark text-white font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
                         >
-                            <PlusCircle className="h-5 w-5" /> 
+                            <PlusCircle className="h-5 w-5" />
                             <span className="hidden sm:inline">Novo Curso</span>
                         </Link>
                     </div>
@@ -189,17 +211,18 @@ export default function TeacherDashboard({
                                 Nenhum curso criado
                             </h3>
                             <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                                Crie seu primeiro curso para começar a gerenciar conteúdo e matrículas dos alunos.
+                                Crie seu primeiro curso para começar a gerenciar
+                                conteúdo e matrículas dos alunos.
                             </p>
                             <Link
                                 href={route("teacher.courses.create")}
                                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-primary hover:bg-blue-dark text-white font-semibold rounded-lg transition-colors"
                             >
-                                <PlusCircle className="h-5 w-5" /> 
+                                <PlusCircle className="h-5 w-5" />
                                 Criar Primeiro Curso
                             </Link>
                         </div>
-                    ) : viewMode === 'grid' ? (
+                    ) : viewMode === "grid" ? (
                         // Visualização em grid (estilo Udemy)
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {taughtCourses.map((course) => (
@@ -249,22 +272,7 @@ export default function TeacherDashboard({
                     setShowDeleteModal(false);
                     setCourseToDelete(null);
                 }}
-                onConfirm={() =>
-                    new Promise((resolve) => {
-                        if (!courseToDelete) return resolve();
-                        router.delete(
-                            route("teacher.courses.destroy", courseToDelete.id),
-                            {
-                                preserveScroll: true,
-                                onSuccess: () => {
-                                    setShowDeleteModal(false);
-                                    setCourseToDelete(null);
-                                },
-                                onFinish: () => resolve(),
-                            }
-                        );
-                    })
-                }
+                onConfirm={handleConfirmDelete}
             />
         </div>
     );

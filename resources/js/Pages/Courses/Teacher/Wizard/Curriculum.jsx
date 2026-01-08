@@ -1,6 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm, Link } from "@inertiajs/react";
-import { useEffect } from "react";
 import PrimaryButton from "@/Components/PrimaryButton";
 import { Card } from "primereact/card";
 import { Divider } from "primereact/divider";
@@ -9,31 +8,28 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
 
 export default function Curriculum({ auth, course }) {
-    const { data, setData, post, processing, errors } = useForm({
-        modules: [],
-    });
+    // Inicializar form com os dados do curso de forma sincronizada
+    const normalizedModules =
+        course.modules && course.modules.length > 0
+            ? course.modules.map((module) => ({
+                  ...module,
+                  units: (module.units || []).map((unit) => ({
+                      ...unit,
+                      content: unit.content || {
+                          source: "upload",
+                          type: "video",
+                          file: null,
+                          libraryContent: null,
+                          url: "",
+                          text: "",
+                      },
+                  })),
+              }))
+            : [];
 
-    // Inicializar form com os dados do curso
-    useEffect(() => {
-        if (course.modules && course.modules.length > 0) {
-            // Normalizar dados do servidor para incluir estrutura de conteúdo
-            const normalizedModules = course.modules.map((module) => ({
-                ...module,
-                units: (module.units || []).map((unit) => ({
-                    ...unit,
-                    content: unit.content || {
-                        source: "upload",
-                        type: "video",
-                        file: null,
-                        libraryContent: null,
-                        url: "",
-                        text: "",
-                    },
-                })),
-            }));
-            setData("modules", normalizedModules);
-        }
-    }, [course.id]);
+    const { data, setData, post, processing, errors } = useForm({
+        modules: normalizedModules,
+    });
 
     function submit(e) {
         e.preventDefault();

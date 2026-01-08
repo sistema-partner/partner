@@ -19,14 +19,15 @@ class Course extends Model
         'status',              // planned | active | finished
         'visibility',          // public | private | unlisted
         'enrollment_policy',   // closed | auto | approval
+        'setup_step',          // about | settings | curriculum | completed
         'max_students',
         'start_date',
         'end_date',
     ];
 
     protected $casts = [
-        'start_date'   => 'date',
-        'end_date'     => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'max_students' => 'integer',
     ];
 
@@ -153,7 +154,7 @@ class Course extends Model
     {
         if ($this->relationLoaded('modules')) {
             return $this->modules->sum(
-                fn ($module) => $module->units?->count() ?? 0
+                fn($module) => $module->units?->count() ?? 0
             );
         }
 
