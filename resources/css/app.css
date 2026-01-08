@@ -125,3 +125,27 @@
 .dark .p-multiselect-item:hover {
   background-color: theme('colors.dark.muted');
 }
+
+/* ===============================
+   PRIME REACT – DARK MODE FIX
+   =============================== */
+
+.dark .p-inputtext,
+.dark .p-dropdown-label,
+.dark .p-inputnumber-input,
+.dark .p-calendar .p-inputtext {
+  background-color: theme('colors.dark.card');
+  color: theme('colors.dark.foreground');
+}
+
+.dark .p-inputtext::placeholder {
+  color: theme('colors.dark.muted');
+}
+
+/* Bordas */
+.p-inputtext,
+.p-dropdown,
+.p-inputnumber,
+.p-calendar {
+  border-radius: 0.5rem;
+}

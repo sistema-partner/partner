@@ -77,7 +77,7 @@ class CourseController extends Controller
         ]);
     }
 
-    public function update(Request $request, Course $course)
+    public function updateAbout(Request $request, Course $course)
     {
         Gate::authorize('update', $course);
 
@@ -97,6 +97,63 @@ class CourseController extends Controller
         return redirect()
             ->route('teacher.courses.settings', $course)
             ->with('success', 'Informações do curso salvas');
+    }
+
+    protected function updateSettings(Request $request, Course $course)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:planned,active,ended,cancelled'],
+            'visibility' => ['required', 'in:public,unlisted,private'],
+            'enrollment_policy' => ['required', 'in:closed,auto_approve,manual_approval'],
+            'accepts_enrollments' => ['required', 'boolean'],
+            'max_students' => ['nullable', 'integer', 'min:1'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        $course->update($validated);
+
+        return redirect()
+            ->route('teacher.courses.curriculum', $course)
+            ->with('success', 'Configurações salvas');
+    }
+
+
+    public function update(Request $request, Course $course)
+    {
+        Gate::authorize('update', $course);
+
+        $step = $request->input('step');
+
+        switch ($step) {
+            case 'about':
+                return $this->updateAbout($request, $course);
+
+            case 'settings':
+                return $this->updateSettings($request, $course);
+
+            default:
+                abort(400, 'Invalid step');
+        }
+    }
+
+
+    public function settings(Course $course)
+    {
+        Gate::authorize('update', $course);
+
+        return Inertia::render('Courses/Teacher/Wizard/Settings', [
+            'course' => [
+                'id' => $course->id,
+                'status' => $course->status,
+                'visibility' => $course->visibility,
+                'enrollment_policy' => $course->enrollment_policy,
+                'accepts_enrollments' => $course->accepts_enrollments,
+                'max_students' => $course->max_students,
+                'start_date' => optional($course->start_date)->format('Y-m-d'),
+                'end_date' => optional($course->end_date)->format('Y-m-d'),
+            ],
+        ]);
     }
 
     public function show(Course $course)
