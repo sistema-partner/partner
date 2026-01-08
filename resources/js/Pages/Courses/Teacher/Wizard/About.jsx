@@ -89,24 +89,28 @@ export default function About({ auth, course, tags }) {
                         />
                         <InputError message={errors.description} />
                     </div>
-                    <div className="primereact-wrapper border-solid border-gray-500">
-                        <MultiSelect
-                            value={data?.tags}
-                            onChange={(e) => setData("tags", e.value)}
-                            options={tags}
-                            optionLabel="name"
-                            filter
-                            filterDelay={400}
-                            placeholder="Filtrar tags"
-                            maxSelectedLabels={5}
-                            className="w-full"
-                            pt={{
-                                root: {
-                                    className:
-                                        "border border-light-border dark:border-dark-border rounded-lg",
-                                },
-                            }}
-                        />
+                    <div>
+                        <InputLabel value="Tags do curso" />
+                        <div className="primereact-wrapper border-solid border-gray-500">
+                            <MultiSelect
+                                value={data?.tags}
+                                onChange={(e) => setData("tags", e.value)}
+                                options={tags}
+                                optionLabel="name"
+                                filter
+                                filterDelay={400}
+                                placeholder="Selecione as tags do curso"
+                                maxSelectedLabels={5}
+                                className="w-full"
+                                pt={{
+                                    root: {
+                                        className:
+                                            "border border-light-border dark:border-dark-border rounded-lg",
+                                    },
+                                }}
+                            />
+                        </div>
+                        <InputError message={errors.tags} />
                     </div>
 
                     <PrimeImageUpload

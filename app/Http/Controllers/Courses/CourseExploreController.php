@@ -12,10 +12,10 @@ class CourseExploreController extends Controller
     public function index()
     {
         $courses = Course::whereIn('status', ['planned', 'active'])
-                            ->where('visibility', 'public')
-                            ->with('teacher')
-                            ->latest()
-                            ->paginate(12);
+            ->where('visibility', 'public')
+            ->with('teacher')
+            ->latest()
+            ->paginate(12);
 
         return Inertia::render('Courses/Explore', [
             'courses' => $courses,
@@ -24,16 +24,15 @@ class CourseExploreController extends Controller
 
     public function show(Request $request, Course $course)
     {
-        // Carrega professor, avisos (contents) e módulos com conteúdos e autores
+        // Carrega professor e módulos com unidades
         $course->load([
             'teacher',
-            'contents.author',
-            'modules.contents.user'
+            'modules.units'
         ]);
-        
+
         $enrollmentStatus = $course->enrollments()
-                                ->where('student_id', $request->user()->id)
-                                ->first();
+            ->where('student_id', $request->user()->id)
+            ->first();
 
         return Inertia::render('Courses/PublicShow', [
             'course' => $course,

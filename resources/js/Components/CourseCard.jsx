@@ -187,7 +187,10 @@ const CourseCard = ({ course, onDelete, isTeacher = true, viewMode }) => {
                         <>
                             <div className="flex items-center gap-2">
                                 <Link
-                                    href={route("teacher.courses.edit", course.id)}
+                                    href={route(
+                                        "teacher.courses.about",
+                                        course.id
+                                    )}
                                     className="inline-flex items-center gap-1 px-3 py-2 bg-blue-primary hover:bg-blue-dark text-white text-[0.8rem] font-semibold rounded-lg transition-colors shadow-sm hover:shadow-md"
                                 >
                                     <Edit3 className="h-3 w-3" />
