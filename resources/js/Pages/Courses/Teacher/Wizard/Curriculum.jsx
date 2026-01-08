@@ -16,7 +16,22 @@ export default function Curriculum({ auth, course }) {
     // Inicializar form com os dados do curso
     useEffect(() => {
         if (course.modules && course.modules.length > 0) {
-            setData("modules", course.modules);
+            // Normalizar dados do servidor para incluir estrutura de conteúdo
+            const normalizedModules = course.modules.map((module) => ({
+                ...module,
+                units: (module.units || []).map((unit) => ({
+                    ...unit,
+                    content: unit.content || {
+                        source: "upload",
+                        type: "video",
+                        file: null,
+                        libraryContent: null,
+                        url: "",
+                        text: "",
+                    },
+                })),
+            }));
+            setData("modules", normalizedModules);
         }
     }, [course.id]);
 
@@ -62,6 +77,14 @@ export default function Curriculum({ auth, course }) {
             title: "",
             type: "lesson",
             is_optional: false,
+            content: {
+                source: "upload", // 'upload' ou 'library'
+                type: "video", // 'video', 'pdf', 'document', 'link', 'text'
+                file: null,
+                libraryContent: null,
+                url: "",
+                text: "",
+            },
         });
         setData("modules", modules);
     }
@@ -69,6 +92,12 @@ export default function Curriculum({ auth, course }) {
     function updateUnit(mIndex, uIndex, field, value) {
         const modules = [...data.modules];
         modules[mIndex].units[uIndex][field] = value;
+        setData("modules", modules);
+    }
+
+    function updateUnitContent(mIndex, uIndex, field, value) {
+        const modules = [...data.modules];
+        modules[mIndex].units[uIndex].content[field] = value;
         setData("modules", modules);
     }
 
@@ -83,6 +112,19 @@ export default function Curriculum({ auth, course }) {
         { label: "Quiz", value: "quiz" },
         { label: "Projeto", value: "project" },
         { label: "Exercício", value: "code_exercise" },
+    ];
+
+    const contentTypeOptions = [
+        { label: "Vídeo", value: "video" },
+        { label: "PDF", value: "pdf" },
+        { label: "Documento", value: "document" },
+        { label: "Link", value: "link" },
+        { label: "Texto", value: "text" },
+    ];
+
+    const sourceOptions = [
+        { label: "Upload", value: "upload" },
+        { label: "Biblioteca", value: "library" },
     ];
 
     return (
@@ -183,74 +225,301 @@ export default function Curriculum({ auth, course }) {
                                                     (unit, uIndex) => (
                                                         <div
                                                             key={uIndex}
-                                                            className="flex gap-3 items-start bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-light-border dark:border-dark-border"
+                                                            className="space-y-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-light-border dark:border-dark-border"
                                                         >
-                                                            <div className="flex-1 space-y-3">
-                                                                <InputText
-                                                                    type="text"
-                                                                    className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
-                                                                    placeholder="Título da unidade"
-                                                                    value={
-                                                                        unit.title
-                                                                    }
-                                                                    onChange={(
-                                                                        e
-                                                                    ) =>
-                                                                        updateUnit(
-                                                                            mIndex,
-                                                                            uIndex,
-                                                                            "title",
+                                                            {/* Informações básicas da unidade */}
+                                                            <div className="flex gap-3 items-start">
+                                                                <div className="flex-1 space-y-3">
+                                                                    <InputText
+                                                                        type="text"
+                                                                        className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
+                                                                        placeholder="Título da unidade"
+                                                                        value={
+                                                                            unit.title
+                                                                        }
+                                                                        onChange={(
                                                                             e
-                                                                                .target
-                                                                                .value
-                                                                        )
-                                                                    }
-                                                                />
+                                                                        ) =>
+                                                                            updateUnit(
+                                                                                mIndex,
+                                                                                uIndex,
+                                                                                "title",
+                                                                                e
+                                                                                    .target
+                                                                                    .value
+                                                                            )
+                                                                        }
+                                                                    />
 
-                                                                <Dropdown
-                                                                    value={
-                                                                        unit.type
-                                                                    }
-                                                                    onChange={(
-                                                                        e
-                                                                    ) =>
-                                                                        updateUnit(
+                                                                    <Dropdown
+                                                                        value={
+                                                                            unit.type
+                                                                        }
+                                                                        onChange={(
+                                                                            e
+                                                                        ) =>
+                                                                            updateUnit(
+                                                                                mIndex,
+                                                                                uIndex,
+                                                                                "type",
+                                                                                e.value
+                                                                            )
+                                                                        }
+                                                                        options={
+                                                                            unitTypeOptions
+                                                                        }
+                                                                        optionLabel="label"
+                                                                        className="w-full"
+                                                                        pt={{
+                                                                            root: {
+                                                                                className:
+                                                                                    "w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card",
+                                                                            },
+                                                                            input: {
+                                                                                className:
+                                                                                    "text-light-foreground dark:text-dark-foreground",
+                                                                            },
+                                                                        }}
+                                                                    />
+                                                                </div>
+
+                                                                <button
+                                                                    onClick={() =>
+                                                                        removeUnit(
                                                                             mIndex,
-                                                                            uIndex,
-                                                                            "type",
-                                                                            e.value
+                                                                            uIndex
                                                                         )
                                                                     }
-                                                                    options={
-                                                                        unitTypeOptions
-                                                                    }
-                                                                    optionLabel="label"
-                                                                    className="w-full"
-                                                                    pt={{
-                                                                        root: {
-                                                                            className:
-                                                                                "w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card",
-                                                                        },
-                                                                        input: {
-                                                                            className:
-                                                                                "text-light-foreground dark:text-dark-foreground",
-                                                                        },
-                                                                    }}
-                                                                />
+                                                                    className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors mt-1"
+                                                                    title="Remover unidade"
+                                                                >
+                                                                    <i className="pi pi-trash"></i>
+                                                                </button>
                                                             </div>
 
-                                                            <button
-                                                                onClick={() =>
-                                                                    removeUnit(
-                                                                        mIndex,
-                                                                        uIndex
-                                                                    )
-                                                                }
-                                                                className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors mt-1"
-                                                                title="Remover unidade"
-                                                            >
-                                                                <i className="pi pi-trash"></i>
-                                                            </button>
+                                                            {/* Conteúdo da unidade (apenas para aulas) */}
+                                                            {unit.type ===
+                                                                "lesson" && (
+                                                                <div className="pt-4 border-t border-light-border dark:border-dark-border space-y-4">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <i className="pi pi-file text-gray-500 dark:text-gray-400"></i>
+                                                                        <h5 className="font-medium text-gray-700 dark:text-gray-300">
+                                                                            Conteúdo
+                                                                            da
+                                                                            Aula
+                                                                        </h5>
+                                                                    </div>
+
+                                                                    {/* Tipo de conteúdo */}
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                            Tipo
+                                                                            de
+                                                                            Conteúdo
+                                                                        </label>
+                                                                        <Dropdown
+                                                                            value={
+                                                                                unit
+                                                                                    .content
+                                                                                    .type
+                                                                            }
+                                                                            onChange={(
+                                                                                e
+                                                                            ) =>
+                                                                                updateUnitContent(
+                                                                                    mIndex,
+                                                                                    uIndex,
+                                                                                    "type",
+                                                                                    e.value
+                                                                                )
+                                                                            }
+                                                                            options={
+                                                                                contentTypeOptions
+                                                                            }
+                                                                            optionLabel="label"
+                                                                            className="w-full"
+                                                                            pt={{
+                                                                                root: {
+                                                                                    className:
+                                                                                        "w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card",
+                                                                                },
+                                                                                input: {
+                                                                                    className:
+                                                                                        "text-light-foreground dark:text-dark-foreground",
+                                                                                },
+                                                                            }}
+                                                                        />
+                                                                    </div>
+
+                                                                    {/* Fonte de conteúdo */}
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                            Fonte
+                                                                        </label>
+                                                                        <Dropdown
+                                                                            value={
+                                                                                unit
+                                                                                    .content
+                                                                                    .source
+                                                                            }
+                                                                            onChange={(
+                                                                                e
+                                                                            ) =>
+                                                                                updateUnitContent(
+                                                                                    mIndex,
+                                                                                    uIndex,
+                                                                                    "source",
+                                                                                    e.value
+                                                                                )
+                                                                            }
+                                                                            options={
+                                                                                sourceOptions
+                                                                            }
+                                                                            optionLabel="label"
+                                                                            className="w-full"
+                                                                            pt={{
+                                                                                root: {
+                                                                                    className:
+                                                                                        "w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card",
+                                                                                },
+                                                                                input: {
+                                                                                    className:
+                                                                                        "text-light-foreground dark:text-dark-foreground",
+                                                                                },
+                                                                            }}
+                                                                        />
+                                                                    </div>
+
+                                                                    {/* Campos dinâmicos baseado no tipo */}
+                                                                    {unit
+                                                                        .content
+                                                                        .source ===
+                                                                    "upload" ? (
+                                                                        <>
+                                                                            {(unit
+                                                                                .content
+                                                                                .type ===
+                                                                                "video" ||
+                                                                                unit
+                                                                                    .content
+                                                                                    .type ===
+                                                                                    "pdf" ||
+                                                                                unit
+                                                                                    .content
+                                                                                    .type ===
+                                                                                    "document") && (
+                                                                                <div className="space-y-2">
+                                                                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                                        Arquivo
+                                                                                    </label>
+                                                                                    <input
+                                                                                        type="file"
+                                                                                        className="w-full border border-dashed border-blue-300 dark:border-blue-700 rounded-lg p-3 text-sm text-gray-600 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 dark:file:bg-blue-900/30 dark:file:text-blue-400"
+                                                                                        onChange={(
+                                                                                            e
+                                                                                        ) =>
+                                                                                            updateUnitContent(
+                                                                                                mIndex,
+                                                                                                uIndex,
+                                                                                                "file",
+                                                                                                e
+                                                                                                    .target
+                                                                                                    .files?.[0]
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                            )}
+
+                                                                            {unit
+                                                                                .content
+                                                                                .type ===
+                                                                                "link" && (
+                                                                                <div className="space-y-2">
+                                                                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                                        URL
+                                                                                    </label>
+                                                                                    <InputText
+                                                                                        type="url"
+                                                                                        className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
+                                                                                        placeholder="https://..."
+                                                                                        value={
+                                                                                            unit
+                                                                                                .content
+                                                                                                .url
+                                                                                        }
+                                                                                        onChange={(
+                                                                                            e
+                                                                                        ) =>
+                                                                                            updateUnitContent(
+                                                                                                mIndex,
+                                                                                                uIndex,
+                                                                                                "url",
+                                                                                                e
+                                                                                                    .target
+                                                                                                    .value
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                            )}
+
+                                                                            {unit
+                                                                                .content
+                                                                                .type ===
+                                                                                "text" && (
+                                                                                <div className="space-y-2">
+                                                                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                                        Conteúdo
+                                                                                    </label>
+                                                                                    <InputTextarea
+                                                                                        rows={
+                                                                                            4
+                                                                                        }
+                                                                                        className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
+                                                                                        placeholder="Digite o conteúdo da aula..."
+                                                                                        value={
+                                                                                            unit
+                                                                                                .content
+                                                                                                .text
+                                                                                        }
+                                                                                        onChange={(
+                                                                                            e
+                                                                                        ) =>
+                                                                                            updateUnitContent(
+                                                                                                mIndex,
+                                                                                                uIndex,
+                                                                                                "text",
+                                                                                                e
+                                                                                                    .target
+                                                                                                    .value
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    ) : (
+                                                                        <div className="space-y-2">
+                                                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                                Selecionar
+                                                                                da
+                                                                                Biblioteca
+                                                                            </label>
+                                                                            <div className="border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400">
+                                                                                <i className="pi pi-search block text-2xl mb-2"></i>
+                                                                                <p className="text-sm">
+                                                                                    Busca
+                                                                                    na
+                                                                                    biblioteca
+                                                                                    (em
+                                                                                    breve)
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )
                                                 )}
