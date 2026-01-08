@@ -10,7 +10,7 @@ class ModuleUnit extends Model
     use HasFactory;
 
     protected $fillable = [
-        'module_id',
+        'course_module_id',
         'title',
         'description',
         'type',

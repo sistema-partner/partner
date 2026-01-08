@@ -13,6 +13,7 @@ class CourseModule extends Model
         'title',
         'description',
         'order',
+        'slug',
         'is_public'
     ];
 

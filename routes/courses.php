@@ -40,10 +40,10 @@ Route::middleware(['auth', 'verified', 'teacher'])
         Route::post('/{course}/about', [CourseController::class, 'updateAbout'])->name('about.update');
 
         Route::get('/{course}/settings', [CourseController::class, 'settings'])->name('settings');
-        Route::put('/{course}/settings', [CourseController::class, 'updateSettings'])->name('settings.update');
+        Route::post('/{course}/settings', [CourseController::class, 'updateSettings'])->name('settings.update');
 
         Route::get('/{course}/curriculum', [CourseController::class, 'curriculum'])->name('curriculum');
-        Route::patch('/{course}/curriculum', [CourseController::class, 'updateCurriculum'])->name('curriculum.update');
+        Route::post('/{course}/curriculum', [CourseController::class, 'updateCurriculum'])->name('curriculum.update');
 
         Route::get('/{course}/publish', [CourseController::class, 'publish'])->name('publish');
 

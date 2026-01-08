@@ -24,7 +24,18 @@ export default function Settings({ auth, course }) {
         e.preventDefault();
 
         post(route("teacher.courses.settings.update", course.id), {
-            _method: "put",
+            status: data.status,
+            visibility: data.visibility,
+            enrollment_policy: data.enrollment_policy,
+            accepts_enrollments: data.accepts_enrollments,
+            max_students: data.max_students,
+            start_date: data.start_date
+                ? data.start_date.toISOString().split("T")[0]
+                : null,
+            end_date: data.end_date
+                ? data.end_date.toISOString().split("T")[0]
+                : null,
+            _method: "PUT",
         });
     }
 

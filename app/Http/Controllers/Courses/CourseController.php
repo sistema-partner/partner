@@ -123,7 +123,7 @@ class CourseController extends Controller
             ->with('success', 'Informações do curso salvas');
     }
 
-    protected function updateSettings(Request $request, Course $course)
+    public function updateSettings(Request $request, Course $course)
     {
         $validated = $request->validate([
             'status' => ['required', 'in:planned,active,ended,cancelled'],
@@ -151,13 +151,11 @@ class CourseController extends Controller
             'modules.*.id' => 'nullable|integer',
             'modules.*.title' => 'required|string|max:255',
             'modules.*.description' => 'nullable|string',
-            'modules.*.order' => 'required|integer',
 
             'modules.*.units' => 'array',
             'modules.*.units.*.id' => 'nullable|integer',
-            'modules.*.units.*.title' => 'required|string|max:255',
-            'modules.*.units.*.type' => 'required|in:lesson,quiz,project,code_exercise',
-            'modules.*.units.*.order' => 'required|integer',
+            'modules.*.units.*.title' => 'nullable|string|max:255',
+            'modules.*.units.*.type' => 'nullable|in:lesson,quiz,project,code_exercise',
             'modules.*.units.*.is_optional' => 'boolean',
         ]);
 
@@ -174,24 +172,38 @@ class CourseController extends Controller
                     if (!$existingModule) {
                         abort(403, 'Unauthorized module');
                     }
-                }
 
-                $module = CourseModule::updateOrCreate(
-                    [
-                        'id' => $moduleData['id'] ?? null,
-                    ],
-                    [
+                    // Atualizar módulo existente
+                    $module = $existingModule;
+                    $module->update([
+                        'title' => $moduleData['title'],
+                        'description' => $moduleData['description'] ?? null,
+                    ]);
+                } else {
+                    // Criar novo módulo
+                    $module = CourseModule::create([
                         'course_id' => $course->id,
                         'title' => $moduleData['title'],
                         'description' => $moduleData['description'] ?? null,
-                    ]
-                );
+                        'slug' => Str::slug($moduleData['title']) . '-' . Str::random(6),
+                    ]);
+
+                    // Debug: Verificar se o módulo foi criado com ID
+                    if (!$module || !$module->id) {
+                        return response()->json(['error' => 'Módulo não foi criado corretamente'], 422);
+                    }
+                }
 
                 $moduleIds[] = $module->id;
 
                 $unitIds = [];
 
-                foreach ($moduleData['units'] ?? [] as $unitData) {
+                foreach ($moduleData['units'] ?? [] as $unitIndex => $unitData) {
+                    // Pular unidades vazias (sem título)
+                    if (empty(trim($unitData['title'] ?? ''))) {
+                        continue;
+                    }
+
                     // Valida se a unidade pertence ao módulo
                     if (!empty($unitData['id'])) {
                         $existingUnit = ModuleUnit::where('id', $unitData['id'])
@@ -201,20 +213,25 @@ class CourseController extends Controller
                         if (!$existingUnit) {
                             abort(403, 'Unauthorized unit');
                         }
-                    }
 
-                    $unit = ModuleUnit::updateOrCreate(
-                        [
-                            'id' => $unitData['id'] ?? null,
-                        ],
-                        [
+                        // Atualizar unidade existente
+                        $unit = $existingUnit;
+                        $unit->update([
+                            'title' => $unitData['title'],
+                            'type' => $unitData['type'],
+                            'is_optional' => $unitData['is_optional'] ?? false,
+                            'order' => $unitIndex,
+                        ]);
+                    } else {
+                        // Criar nova unidade
+                        $unit = ModuleUnit::create([
                             'course_module_id' => $module->id,
                             'title' => $unitData['title'],
                             'type' => $unitData['type'],
-                            'order' => $unitData['order'],
                             'is_optional' => $unitData['is_optional'] ?? false,
-                        ]
-                    );
+                            'order' => $unitIndex,
+                        ]);
+                    }
 
                     $unitIds[] = $unit->id;
                 }
