@@ -1,20 +1,20 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm, Link } from "@inertiajs/react";
 import PrimaryButton from "@/Components/PrimaryButton";
-import { Card } from "primereact/card";
-import { Divider } from "primereact/divider";
-import { InputText } from "primereact/inputtext";
-import { InputTextarea } from "primereact/inputtextarea";
-import { Dropdown } from "primereact/dropdown";
+import { useState } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { BookOpen, Play, FileQuestion, Code2, Trash2, ChevronUp, ChevronDown, Plus, CloudUpload } from "lucide-react";
 
 export default function Curriculum({ auth, course }) {
-    // Inicializar form com os dados do curso de forma sincronizada
+    // Normalizar dados
     const normalizedModules =
         course.modules && course.modules.length > 0
-            ? course.modules.map((module) => ({
+            ? course.modules.map((module, index) => ({
                   ...module,
-                  units: (module.units || []).map((unit) => ({
+                  order: module.order || index,
+                  units: (module.units || []).map((unit, idx) => ({
                       ...unit,
+                      order: unit.order || idx,
                       content: unit.content || {
                           source: "upload",
                           type: "video",
@@ -28,28 +28,52 @@ export default function Curriculum({ auth, course }) {
             : [];
 
     const { data, setData, post, processing, errors } = useForm({
-        modules: normalizedModules,
+        modules: normalizedModules.sort((a, b) => a.order - b.order),
     });
+
+    // Estados para controles visuais
+    const [expandedModules, setExpandedModules] = useState({});
+    const [expandedUnits, setExpandedUnits] = useState({});
 
     function submit(e) {
         e.preventDefault();
-
         post(route("teacher.courses.curriculum.update", course.id), {
             _method: "PATCH",
         });
     }
 
+    // Toggle para expandir/contrair módulos
+    const toggleModule = (moduleIndex) => {
+        setExpandedModules((prev) => ({
+            ...prev,
+            [moduleIndex]: !prev[moduleIndex],
+        }));
+    };
+
+    // Toggle para expandir/contrair unidades
+    const toggleUnit = (moduleIndex, unitIndex) => {
+        setExpandedUnits((prev) => ({
+            ...prev,
+            [`${moduleIndex}-${unitIndex}`]:
+                !prev[`${moduleIndex}-${unitIndex}`],
+        }));
+    };
+
     // ---- MODULES ----
     function addModule() {
-        setData("modules", [
-            ...data.modules,
-            {
-                id: null,
-                title: "",
-                description: "",
-                units: [],
-            },
-        ]);
+        const newModule = {
+            id: null,
+            title: "Novo Módulo",
+            description: "",
+            order: data.modules.length,
+            units: [],
+        };
+
+        setData("modules", [...data.modules, newModule]);
+        setExpandedModules((prev) => ({
+            ...prev,
+            [data.modules.length]: true,
+        }));
     }
 
     function updateModule(index, field, value) {
@@ -59,30 +83,47 @@ export default function Curriculum({ auth, course }) {
     }
 
     function removeModule(index) {
+        if (!confirm("Tem certeza que deseja remover este módulo?")) return;
+
         const modules = [...data.modules];
         modules.splice(index, 1);
+        // Reordenar os módulos restantes
+        modules.forEach((mod, idx) => (mod.order = idx));
         setData("modules", modules);
+
+        // Remover estado expandido
+        const newExpanded = { ...expandedModules };
+        delete newExpanded[index];
+        setExpandedModules(newExpanded);
     }
 
     // ---- UNITS ----
     function addUnit(moduleIndex) {
         const modules = [...data.modules];
+        const module = modules[moduleIndex];
 
-        modules[moduleIndex].units.push({
+        module.units.push({
             id: null,
-            title: "",
+            title: "Nova Aula",
             type: "lesson",
+            order: module.units.length,
             is_optional: false,
+            duration: "10 min",
             content: {
-                source: "upload", // 'upload' ou 'library'
-                type: "video", // 'video', 'pdf', 'document', 'link', 'text'
+                source: "upload",
+                type: "video",
                 file: null,
                 libraryContent: null,
                 url: "",
                 text: "",
             },
         });
+
         setData("modules", modules);
+        setExpandedUnits((prev) => ({
+            ...prev,
+            [`${moduleIndex}-${module.units.length - 1}`]: true,
+        }));
     }
 
     function updateUnit(mIndex, uIndex, field, value) {
@@ -98,83 +139,225 @@ export default function Curriculum({ auth, course }) {
     }
 
     function removeUnit(mIndex, uIndex) {
+        if (!confirm("Tem certeza que deseja remover esta unidade?")) return;
+
         const modules = [...data.modules];
         modules[mIndex].units.splice(uIndex, 1);
+        // Reordenar unidades
+        modules[mIndex].units.forEach((unit, idx) => (unit.order = idx));
         setData("modules", modules);
+
+        // Remover estado expandido
+        const newExpanded = { ...expandedUnits };
+        delete newExpanded[`${mIndex}-${uIndex}`];
+        setExpandedUnits(newExpanded);
     }
 
-    const unitTypeOptions = [
-        { label: "Aula", value: "lesson" },
-        { label: "Quiz", value: "quiz" },
-        { label: "Projeto", value: "project" },
-        { label: "Exercício", value: "code_exercise" },
-    ];
+    // Função para mover módulos
+    const reorderModules = (sourceIndex, destinationIndex) => {
+        const modules = Array.from(data.modules);
+        const [removed] = modules.splice(sourceIndex, 1);
+        modules.splice(destinationIndex, 0, removed);
 
-    const contentTypeOptions = [
-        { label: "Vídeo", value: "video" },
-        { label: "PDF", value: "pdf" },
-        { label: "Documento", value: "document" },
-        { label: "Link", value: "link" },
-        { label: "Texto", value: "text" },
-    ];
+        // Atualizar ordens
+        modules.forEach((module, index) => {
+            module.order = index;
+        });
 
-    const sourceOptions = [
-        { label: "Upload", value: "upload" },
-        { label: "Biblioteca", value: "library" },
-    ];
+        setData("modules", modules);
+    };
+
+    // Função para mover unidades
+    const reorderUnits = (moduleIndex, sourceIndex, destinationIndex) => {
+        const modules = [...data.modules];
+        const units = Array.from(modules[moduleIndex].units);
+        const [removed] = units.splice(sourceIndex, 1);
+        units.splice(destinationIndex, 0, removed);
+
+        // Atualizar ordens
+        units.forEach((unit, index) => {
+            unit.order = index;
+        });
+
+        modules[moduleIndex].units = units;
+        setData("modules", modules);
+    };
+
+    // Ícones por tipo de unidade
+    const getUnitIcon = (type) => {
+        switch (type) {
+            case "quiz":
+                return <FileQuestion className="w-4 h-4" />;
+            case "project":
+                return <BookOpen className="w-4 h-4" />;
+            case "code_exercise":
+                return <Code2 className="w-4 h-4" />;
+            default:
+                return <Play className="w-4 h-4" />;
+        }
+    };
+
+    // Cor por tipo de unidade
+    const getUnitColor = (type) => {
+        switch (type) {
+            case "quiz":
+                return "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400";
+            case "project":
+                return "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400";
+            case "code_exercise":
+                return "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400";
+            default:
+                return "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400";
+        }
+    };
 
     return (
         <AuthenticatedLayout user={auth.user}>
             <Head title="Currículo do curso" />
 
-            <div className="max-w-4xl mx-auto py-10">
+            <div className="max-w-6xl mx-auto py-8 px-4">
                 {/* Cabeçalho */}
-                <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 mb-4">
-                        <i className="pi pi-list text-3xl text-blue-600 dark:text-blue-400"></i>
+                <div className="mb-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                                Currículo do Curso
+                            </h1>
+                            <p className="text-gray-600 dark:text-gray-400">
+                                Organize os módulos e aulas do seu curso
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href={route(
+                                    "teacher.courses.settings",
+                                    course.id
+                                )}
+                                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                            >
+                                Voltar
+                            </Link>
+                            <PrimaryButton
+                                onClick={submit}
+                                disabled={processing}
+                                className="px-6 py-2"
+                            >
+                                {processing
+                                    ? "Salvando..."
+                                    : "Salvar Currículo"}
+                            </PrimaryButton>
+                        </div>
                     </div>
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-                        Currículo
-                    </h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-2">
-                        Organize seus módulos e unidades de aprendizado
-                    </p>
                 </div>
 
-                <Card className="shadow-lg border-0">
-                    <form onSubmit={submit} className="">
-                        <div className="space-y-8">
-                            {data.modules.map((module, mIndex) => (
-                                <div key={mIndex}>
-                                    {/* Título do Módulo */}
-                                    <div className="flex items-center gap-3 mb-8">
-                                        <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                                            <i className="pi pi-bookmark text-blue-600 dark:text-blue-400"></i>
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                                Módulo {mIndex + 1}
-                                            </h3>
-                                        </div>
-                                        <button
-                                            onClick={() => removeModule(mIndex)}
-                                            className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                            title="Remover módulo"
-                                        >
-                                            <i className="pi pi-trash"></i>
-                                        </button>
-                                    </div>
+                {/* Estatísticas */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <BookOpen className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Módulos
+                                </p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {data.modules.length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                <Play className="w-6 h-6 text-green-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Aulas
+                                </p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {data.modules.reduce(
+                                        (acc, mod) => acc + mod.units.length,
+                                        0
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                <FileQuestion className="w-6 h-6 text-purple-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Quizzes
+                                </p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {data.modules.reduce(
+                                        (acc, mod) =>
+                                            acc +
+                                            mod.units.filter(
+                                                (u) => u.type === "quiz"
+                                            ).length,
+                                        0
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                                <Code2 className="w-6 h-6 text-orange-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    Exercícios
+                                </p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {data.modules.reduce(
+                                        (acc, mod) =>
+                                            acc +
+                                            mod.units.filter(
+                                                (u) =>
+                                                    u.type === "code_exercise"
+                                            ).length,
+                                        0
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                    <div className="space-y-4 ml-4">
-                                        {/* Input de Título */}
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Título do módulo
-                                            </label>
-                                            <InputText
+                {/* Módulos */}
+                <div className="space-y-4">
+                    {data.modules.map((module, mIndex) => (
+                        <div
+                            key={mIndex}
+                            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                        >
+                            {/* Cabeçalho do Módulo */}
+                            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <button
+                                            onClick={() => toggleModule(mIndex)}
+                                            className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                        >
+                                            <i
+                                                className={`pi pi-chevron-${
+                                                    expandedModules[mIndex]
+                                                        ? "up"
+                                                        : "down"
+                                                }`}
+                                            ></i>
+                                        </button>
+                                        <div className="flex-1">
+                                            <input
                                                 type="text"
-                                                className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
-                                                placeholder="Ex: Introdução ao React"
                                                 value={module.title}
                                                 onChange={(e) =>
                                                     updateModule(
@@ -183,71 +366,136 @@ export default function Curriculum({ auth, course }) {
                                                         e.target.value
                                                     )
                                                 }
+                                                className="w-full text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-0 text-gray-900 dark:text-white"
+                                                placeholder="Nome do módulo"
                                             />
                                         </div>
+                                        <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-sm text-gray-600 dark:text-gray-400">
+                                            {module.units.length} aulas
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-4">
+                                        <button
+                                            onClick={() => removeModule(mIndex)}
+                                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                            title="Remover módulo"
+                                        >
+                                            <i className="pi pi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {expandedModules[mIndex] && (
+                                    <div className="mt-3 ml-11">
+                                        <textarea
+                                            value={module.description || ""}
+                                            onChange={(e) =>
+                                                updateModule(
+                                                    mIndex,
+                                                    "description",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="w-full text-sm bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            placeholder="Descrição do módulo (opcional)"
+                                            rows="2"
+                                        />
+                                    </div>
+                                )}
+                            </div>
 
-                                        {/* Input de Descrição */}
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Descrição
-                                            </label>
-                                            <InputTextarea
-                                                rows={3}
-                                                className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
-                                                placeholder="Descreva o conteúdo deste módulo"
-                                                value={module.description ?? ""}
-                                                onChange={(e) =>
-                                                    updateModule(
-                                                        mIndex,
-                                                        "description",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </div>
-
-                                        {/* Unidades */}
-                                        <div className="space-y-4 mt-6">
-                                            <div className="flex items-center gap-2">
-                                                <i className="pi pi-list text-gray-500 dark:text-gray-400"></i>
-                                                <h4 className="font-semibold text-gray-700 dark:text-gray-300">
-                                                    Unidades (
-                                                    {module.units.length})
-                                                </h4>
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                {module.units.map(
-                                                    (unit, uIndex) => (
+                            {/* Conteúdo do Módulo (expandido) */}
+                            {expandedModules[mIndex] && (
+                                <div className="p-4">
+                                    {/* Unidades do módulo */}
+                                    <div className="space-y-3">
+                                        {module.units.map((unit, uIndex) => (
+                                            <div
+                                                key={uIndex}
+                                                className="bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-600"
+                                            >
+                                                <div className="p-3">
+                                                    <div className="flex items-center gap-3">
                                                         <div
-                                                            key={uIndex}
-                                                            className="space-y-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg border border-light-border dark:border-dark-border"
+                                                            className={`w-8 h-8 rounded-lg flex items-center justify-center ${getUnitColor(
+                                                                unit.type
+                                                            )}`}
                                                         >
-                                                            {/* Informações básicas da unidade */}
-                                                            <div className="flex gap-3 items-start">
-                                                                <div className="flex-1 space-y-3">
-                                                                    <InputText
-                                                                        type="text"
-                                                                        className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
-                                                                        placeholder="Título da unidade"
-                                                                        value={
-                                                                            unit.title
-                                                                        }
-                                                                        onChange={(
-                                                                            e
-                                                                        ) =>
-                                                                            updateUnit(
-                                                                                mIndex,
-                                                                                uIndex,
-                                                                                "title",
-                                                                                e
-                                                                                    .target
-                                                                                    .value
-                                                                            )
-                                                                        }
-                                                                    />
+                                                            <span className="text-sm">
+                                                                {getUnitIcon(
+                                                                    unit.type
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <input
+                                                                type="text"
+                                                                value={
+                                                                    unit.title
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateUnit(
+                                                                        mIndex,
+                                                                        uIndex,
+                                                                        "title",
+                                                                        e.target
+                                                                            .value
+                                                                    )
+                                                                }
+                                                                className="w-full font-medium bg-transparent border-none focus:outline-none focus:ring-0 text-gray-900 dark:text-white"
+                                                                placeholder="Título da unidade"
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                                {unit.duration ||
+                                                                    "10 min"}
+                                                            </span>
+                                                            <button
+                                                                onClick={() =>
+                                                                    toggleUnit(
+                                                                        mIndex,
+                                                                        uIndex
+                                                                    )
+                                                                }
+                                                                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                                            >
+                                                                <i
+                                                                    className={`pi pi-chevron-${
+                                                                        expandedUnits[
+                                                                            `${mIndex}-${uIndex}`
+                                                                        ]
+                                                                            ? "up"
+                                                                            : "down"
+                                                                    }`}
+                                                                ></i>
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    removeUnit(
+                                                                        mIndex,
+                                                                        uIndex
+                                                                    )
+                                                                }
+                                                                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                                                title="Remover unidade"
+                                                            >
+                                                                <i className="pi pi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
 
-                                                                    <Dropdown
+                                                    {/* Conteúdo expandido da unidade */}
+                                                    {expandedUnits[
+                                                        `${mIndex}-${uIndex}`
+                                                    ] && (
+                                                        <div className="mt-4 pl-11 space-y-4">
+                                                            {/* Tipo de unidade */}
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-32">
+                                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                        Tipo
+                                                                    </label>
+                                                                    <select
                                                                         value={
                                                                             unit.type
                                                                         }
@@ -258,135 +506,171 @@ export default function Curriculum({ auth, course }) {
                                                                                 mIndex,
                                                                                 uIndex,
                                                                                 "type",
-                                                                                e.value
+                                                                                e
+                                                                                    .target
+                                                                                    .value
                                                                             )
                                                                         }
-                                                                        options={
-                                                                            unitTypeOptions
+                                                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                                                                    >
+                                                                        <option value="lesson">
+                                                                            Aula
+                                                                        </option>
+                                                                        <option value="quiz">
+                                                                            Quiz
+                                                                        </option>
+                                                                        <option value="project">
+                                                                            Projeto
+                                                                        </option>
+                                                                        <option value="code_exercise">
+                                                                            Exercício
+                                                                        </option>
+                                                                    </select>
+                                                                </div>
+
+                                                                {/* Duração */}
+                                                                <div className="w-32">
+                                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                        Duração
+                                                                    </label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            unit.duration ||
+                                                                            ""
                                                                         }
-                                                                        optionLabel="label"
-                                                                        className="w-full"
-                                                                        pt={{
-                                                                            root: {
-                                                                                className:
-                                                                                    "w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card",
-                                                                            },
-                                                                            input: {
-                                                                                className:
-                                                                                    "text-light-foreground dark:text-dark-foreground",
-                                                                            },
-                                                                        }}
+                                                                        onChange={(
+                                                                            e
+                                                                        ) =>
+                                                                            updateUnit(
+                                                                                mIndex,
+                                                                                uIndex,
+                                                                                "duration",
+                                                                                e
+                                                                                    .target
+                                                                                    .value
+                                                                            )
+                                                                        }
+                                                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                                                                        placeholder="ex: 15 min"
                                                                     />
                                                                 </div>
 
-                                                                <button
-                                                                    onClick={() =>
-                                                                        removeUnit(
-                                                                            mIndex,
-                                                                            uIndex
-                                                                        )
-                                                                    }
-                                                                    className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors mt-1"
-                                                                    title="Remover unidade"
-                                                                >
-                                                                    <i className="pi pi-trash"></i>
-                                                                </button>
+                                                                {/* Opcional */}
+                                                                <div className="flex items-center gap-2">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        id={`optional-${mIndex}-${uIndex}`}
+                                                                        checked={
+                                                                            unit.is_optional ||
+                                                                            false
+                                                                        }
+                                                                        onChange={(
+                                                                            e
+                                                                        ) =>
+                                                                            updateUnit(
+                                                                                mIndex,
+                                                                                uIndex,
+                                                                                "is_optional",
+                                                                                e
+                                                                                    .target
+                                                                                    .checked
+                                                                            )
+                                                                        }
+                                                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                                    />
+                                                                    <label
+                                                                        htmlFor={`optional-${mIndex}-${uIndex}`}
+                                                                        className="text-sm text-gray-700 dark:text-gray-300"
+                                                                    >
+                                                                        Opcional
+                                                                    </label>
+                                                                </div>
                                                             </div>
 
-                                                            {/* Conteúdo da unidade (apenas para aulas) */}
+                                                            {/* Conteúdo da aula (apenas para lessons) */}
                                                             {unit.type ===
                                                                 "lesson" && (
-                                                                <div className="pt-4 border-t border-light-border dark:border-dark-border space-y-4">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <i className="pi pi-file text-gray-500 dark:text-gray-400"></i>
-                                                                        <h5 className="font-medium text-gray-700 dark:text-gray-300">
-                                                                            Conteúdo
-                                                                            da
-                                                                            Aula
-                                                                        </h5>
+                                                                <div className="space-y-4">
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div>
+                                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                                Tipo
+                                                                                de
+                                                                                Conteúdo
+                                                                            </label>
+                                                                            <select
+                                                                                value={
+                                                                                    unit
+                                                                                        .content
+                                                                                        .type
+                                                                                }
+                                                                                onChange={(
+                                                                                    e
+                                                                                ) =>
+                                                                                    updateUnitContent(
+                                                                                        mIndex,
+                                                                                        uIndex,
+                                                                                        "type",
+                                                                                        e
+                                                                                            .target
+                                                                                            .value
+                                                                                    )
+                                                                                }
+                                                                                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                                                                            >
+                                                                                <option value="video">
+                                                                                    Vídeo
+                                                                                </option>
+                                                                                <option value="pdf">
+                                                                                    PDF
+                                                                                </option>
+                                                                                <option value="document">
+                                                                                    Documento
+                                                                                </option>
+                                                                                <option value="link">
+                                                                                    Link
+                                                                                </option>
+                                                                                <option value="text">
+                                                                                    Texto
+                                                                                </option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                                Fonte
+                                                                            </label>
+                                                                            <select
+                                                                                value={
+                                                                                    unit
+                                                                                        .content
+                                                                                        .source
+                                                                                }
+                                                                                onChange={(
+                                                                                    e
+                                                                                ) =>
+                                                                                    updateUnitContent(
+                                                                                        mIndex,
+                                                                                        uIndex,
+                                                                                        "source",
+                                                                                        e
+                                                                                            .target
+                                                                                            .value
+                                                                                    )
+                                                                                }
+                                                                                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                                                                            >
+                                                                                <option value="upload">
+                                                                                    Upload
+                                                                                </option>
+                                                                                <option value="library">
+                                                                                    Biblioteca
+                                                                                </option>
+                                                                            </select>
+                                                                        </div>
                                                                     </div>
 
-                                                                    {/* Tipo de conteúdo */}
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                                                            Tipo
-                                                                            de
-                                                                            Conteúdo
-                                                                        </label>
-                                                                        <Dropdown
-                                                                            value={
-                                                                                unit
-                                                                                    .content
-                                                                                    .type
-                                                                            }
-                                                                            onChange={(
-                                                                                e
-                                                                            ) =>
-                                                                                updateUnitContent(
-                                                                                    mIndex,
-                                                                                    uIndex,
-                                                                                    "type",
-                                                                                    e.value
-                                                                                )
-                                                                            }
-                                                                            options={
-                                                                                contentTypeOptions
-                                                                            }
-                                                                            optionLabel="label"
-                                                                            className="w-full"
-                                                                            pt={{
-                                                                                root: {
-                                                                                    className:
-                                                                                        "w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card",
-                                                                                },
-                                                                                input: {
-                                                                                    className:
-                                                                                        "text-light-foreground dark:text-dark-foreground",
-                                                                                },
-                                                                            }}
-                                                                        />
-                                                                    </div>
-
-                                                                    {/* Fonte de conteúdo */}
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                                                            Fonte
-                                                                        </label>
-                                                                        <Dropdown
-                                                                            value={
-                                                                                unit
-                                                                                    .content
-                                                                                    .source
-                                                                            }
-                                                                            onChange={(
-                                                                                e
-                                                                            ) =>
-                                                                                updateUnitContent(
-                                                                                    mIndex,
-                                                                                    uIndex,
-                                                                                    "source",
-                                                                                    e.value
-                                                                                )
-                                                                            }
-                                                                            options={
-                                                                                sourceOptions
-                                                                            }
-                                                                            optionLabel="label"
-                                                                            className="w-full"
-                                                                            pt={{
-                                                                                root: {
-                                                                                    className:
-                                                                                        "w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card",
-                                                                                },
-                                                                                input: {
-                                                                                    className:
-                                                                                        "text-light-foreground dark:text-dark-foreground",
-                                                                                },
-                                                                            }}
-                                                                        />
-                                                                    </div>
-
-                                                                    {/* Campos dinâmicos baseado no tipo */}
+                                                                    {/* Campos específicos por tipo */}
                                                                     {unit
                                                                         .content
                                                                         .source ===
@@ -404,41 +688,67 @@ export default function Curriculum({ auth, course }) {
                                                                                     .content
                                                                                     .type ===
                                                                                     "document") && (
-                                                                                <div className="space-y-2">
-                                                                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                                <div>
+                                                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                                                         Arquivo
                                                                                     </label>
-                                                                                    <input
-                                                                                        type="file"
-                                                                                        className="w-full border border-dashed border-blue-300 dark:border-blue-700 rounded-lg p-3 text-sm text-gray-600 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 dark:file:bg-blue-900/30 dark:file:text-blue-400"
-                                                                                        onChange={(
-                                                                                            e
-                                                                                        ) =>
-                                                                                            updateUnitContent(
-                                                                                                mIndex,
-                                                                                                uIndex,
-                                                                                                "file",
+                                                                                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center relative overflow-hidden">
+                                                                                        <div className="mb-2">
+                                                                                            <i className="pi pi-cloud-upload text-2xl text-gray-400"></i>
+                                                                                        </div>
+                                                                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                                                                            Arraste
+                                                                                            ou
+                                                                                            clique
+                                                                                            para
+                                                                                            fazer
+                                                                                            upload
+                                                                                        </p>
+                                                                                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                                                                                            MP4,
+                                                                                            PDF,
+                                                                                            DOCX
+                                                                                            •
+                                                                                            Máx.
+                                                                                            100MB
+                                                                                        </p>
+                                                                                        <input
+                                                                                            type="file"
+                                                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                                                            style={{
+                                                                                                position:
+                                                                                                    "absolute",
+                                                                                                top: 0,
+                                                                                                left: 0,
+                                                                                                width: "100%",
+                                                                                                height: "100%",
+                                                                                            }}
+                                                                                            onChange={(
                                                                                                 e
-                                                                                                    .target
-                                                                                                    .files?.[0]
-                                                                                            )
-                                                                                        }
-                                                                                    />
+                                                                                            ) =>
+                                                                                                updateUnitContent(
+                                                                                                    mIndex,
+                                                                                                    uIndex,
+                                                                                                    "file",
+                                                                                                    e
+                                                                                                        .target
+                                                                                                        .files?.[0]
+                                                                                                )
+                                                                                            }
+                                                                                        />
+                                                                                    </div>
                                                                                 </div>
-                                                                            )}
-
+                                                                            )}{" "}
                                                                             {unit
                                                                                 .content
                                                                                 .type ===
                                                                                 "link" && (
-                                                                                <div className="space-y-2">
-                                                                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                                <div>
+                                                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                                                         URL
                                                                                     </label>
-                                                                                    <InputText
+                                                                                    <input
                                                                                         type="url"
-                                                                                        className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
-                                                                                        placeholder="https://..."
                                                                                         value={
                                                                                             unit
                                                                                                 .content
@@ -456,24 +766,20 @@ export default function Curriculum({ auth, course }) {
                                                                                                     .value
                                                                                             )
                                                                                         }
+                                                                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                                                                                        placeholder="https://..."
                                                                                     />
                                                                                 </div>
                                                                             )}
-
                                                                             {unit
                                                                                 .content
                                                                                 .type ===
                                                                                 "text" && (
-                                                                                <div className="space-y-2">
-                                                                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                                                <div>
+                                                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                                                         Conteúdo
                                                                                     </label>
-                                                                                    <InputTextarea
-                                                                                        rows={
-                                                                                            4
-                                                                                        }
-                                                                                        className="w-full border border-light-border dark:border-dark-border rounded-lg bg-light-card dark:bg-dark-card px-4 py-2 text-light-foreground dark:text-dark-foreground"
-                                                                                        placeholder="Digite o conteúdo da aula..."
+                                                                                    <textarea
                                                                                         value={
                                                                                             unit
                                                                                                 .content
@@ -491,95 +797,65 @@ export default function Curriculum({ auth, course }) {
                                                                                                     .value
                                                                                             )
                                                                                         }
+                                                                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                                                                                        rows="4"
+                                                                                        placeholder="Digite o conteúdo da aula..."
                                                                                     />
                                                                                 </div>
                                                                             )}
                                                                         </>
                                                                     ) : (
-                                                                        <div className="space-y-2">
-                                                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                                                                Selecionar
+                                                                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                                                                            <p className="text-sm text-blue-800 dark:text-blue-300">
+                                                                                Em
+                                                                                breve:
+                                                                                selecione
+                                                                                conteúdo
                                                                                 da
-                                                                                Biblioteca
-                                                                            </label>
-                                                                            <div className="border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400">
-                                                                                <i className="pi pi-search block text-2xl mb-2"></i>
-                                                                                <p className="text-sm">
-                                                                                    Busca
-                                                                                    na
-                                                                                    biblioteca
-                                                                                    (em
-                                                                                    breve)
-                                                                                </p>
-                                                                            </div>
+                                                                                biblioteca
+                                                                                da
+                                                                                plataforma
+                                                                            </p>
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                             )}
                                                         </div>
-                                                    )
-                                                )}
+                                                    )}
+                                                </div>
                                             </div>
-
-                                            <button
-                                                onClick={() => addUnit(mIndex)}
-                                                className="w-full px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 border border-dashed border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                            >
-                                                <i className="pi pi-plus mr-2"></i>
-                                                Adicionar unidade
-                                            </button>
-                                        </div>
+                                        ))}
                                     </div>
 
-                                    {mIndex < data.modules.length - 1 && (
-                                        <Divider className="my-8" />
-                                    )}
+                                    {/* Botão para adicionar unidade */}
+                                    <button
+                                        onClick={() => addUnit(mIndex)}
+                                        className="mt-4 w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <i className="pi pi-plus"></i>
+                                        Adicionar conteúdo ao módulo
+                                    </button>
                                 </div>
-                            ))}
+                            )}
                         </div>
+                    ))}
 
-                        <div className="space-y-4 pt-6">
-                            <button
-                                onClick={addModule}
-                                className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-                            >
-                                <i className="pi pi-plus"></i>
-                                Adicionar módulo
-                            </button>
+                    {/* Botão para adicionar novo módulo */}
+                    <button
+                        onClick={addModule}
+                        className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex flex-col items-center justify-center gap-2"
+                    >
+                        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                            <i className="pi pi-plus text-xl"></i>
                         </div>
-
-                        {/* Botões de ação */}
-                        <div className="flex flex-col sm:flex-row justify-between gap-4 pt-8 border-t border-light-border dark:border-dark-border mt-8">
-                            <Link
-                                href={route(
-                                    "teacher.courses.settings",
-                                    course.id
-                                )}
-                                className="px-6 py-3 rounded-lg border border-light-border dark:border-dark-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center justify-center gap-2"
-                            >
-                                <i className="pi pi-arrow-left"></i>
-                                Voltar
-                            </Link>
-
-                            <PrimaryButton
-                                disabled={processing}
-                                className="px-8 py-3 rounded-lg flex items-center justify-center gap-2"
-                            >
-                                {processing ? (
-                                    <>
-                                        <i className="pi pi-spin pi-spinner"></i>
-                                        Salvando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="pi pi-check"></i>
-                                        Salvar
-                                    </>
-                                )}
-                            </PrimaryButton>
-                        </div>
-                    </form>
-                </Card>
+                        <span className="font-medium">
+                            Adicionar novo módulo
+                        </span>
+                        <span className="text-sm">
+                            Clique para criar um novo módulo de aprendizado
+                        </span>
+                    </button>
+                </div>
             </div>
         </AuthenticatedLayout>
     );

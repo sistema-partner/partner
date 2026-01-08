@@ -210,7 +210,6 @@ class CourseController extends Controller
                         'course_id' => $course->id,
                         'title' => $moduleData['title'],
                         'description' => $moduleData['description'] ?? null,
-                        'slug' => Str::slug($moduleData['title']) . '-' . Str::random(6),
                     ]);
 
                     // Debug: Verificar se o módulo foi criado com ID
