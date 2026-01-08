@@ -42,7 +42,7 @@ Route::middleware(['auth', 'verified', 'teacher'])
     Route::get('/{course}/publish', [CourseController::class, 'publish'])->name('publish');
 
     // UPDATE GERAL (usado pelas subtelas)
-    Route::put('/{course}', [CourseController::class, 'update'])->name('update');
+    Route::post('/{course}', [CourseController::class, 'update'])->name('update');
     Route::delete('/{course}', [CourseController::class, 'destroy'])->name('destroy');
 
     // 🔹 MÓDULOS

@@ -121,35 +121,22 @@ export default function PrimeImageUpload({
 
     const emptyTemplate = () => {
         return (
-            <div 
-                style={{ 
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '200px',
-                    padding: '2rem 0',
-                    backgroundColor: 'var(--surface-ground)'
-                }}
+            <div
+                onClick={() => fileUploadRef.current?.getInput()?.click()}
+                className="cursor-pointer flex flex-col items-center justify-center min-h-[200px] p-8 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 transition"
             >
-                <i 
-                    className="pi pi-image text-5xl mb-4" 
-                    style={{ 
-                        borderRadius: '50%', 
-                        backgroundColor: 'var(--surface-card)', 
-                        color: 'var(--text-color-secondary)',
-                        padding: '1.25rem',
-                        marginBottom: '1rem'
-                    }}
-                ></i>
-                <span className="text-lg mb-2 text-center" style={{ color: 'var(--text-color-secondary)' }}>
+                <i className="pi pi-image text-5xl mb-4 text-gray-400" />
+
+                <span className="text-lg mb-1 text-gray-600 dark:text-gray-300">
                     Arraste e solte a imagem aqui
                 </span>
-                <span className="text-sm mb-4 text-center" style={{ color: 'var(--text-color-secondary)' }}>
-                    Tamanho máximo: {(maxFileSize / 1000000).toFixed(0)}MB
+
+                <span className="text-sm text-gray-500">
+                    ou clique para selecionar
                 </span>
-                <span className="text-xs text-center" style={{ color: 'var(--text-color-secondary)' }}>
-                    Ou clique para selecionar
+
+                <span className="text-xs mt-2 text-gray-400">
+                    Máx: {(maxFileSize / 1000000).toFixed(0)}MB
                 </span>
             </div>
         );
@@ -174,7 +161,7 @@ export default function PrimeImageUpload({
     };
 
     return (
-        <div className="space-y-2">
+        <div className="">
             {label && <InputLabel value={label} />}
             
             <FileUpload

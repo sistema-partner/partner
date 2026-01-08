@@ -55,6 +55,8 @@ export default {
                   border: '#242F42',
                   input: '#242F42',
                   ring: '#5F96F5',
+                  fontPrimary: '#F9F9F9',
+                  fontSecondary: '#9CA3AF',
                 },
                 // Sua paleta de cores completa
                 blue: {
