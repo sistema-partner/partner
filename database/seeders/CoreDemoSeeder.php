@@ -60,21 +60,22 @@ class CoreDemoSeeder extends Seeder
                 'description' => 'Modelagem e consultas SQL.',
                 'image_url' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-mEvAE4fw8cnGg9sWw-_nT_DuGfrpuRKSMw&s',
             ],
-        ])->map(fn ($c) => Course::create([
-            'teacher_id' => $teacher->id,
-            'title' => $c['title'],
-            'description' => $c['description'],
-            'code' => Str::upper(Str::random(6)),
-            'status' => 'active',
-            'visibility' => 'public',
-            'accepts_enrollments' => true,
-            'image_url' => $c['image_url'],
-        ]));
+        ])->map(fn($c) => Course::create([
+                'teacher_id' => $teacher->id,
+                'title' => $c['title'],
+                'description' => $c['description'],
+                'code' => Str::upper(Str::random(6)),
+                'status' => 'active',
+                'visibility' => 'public',
+                'accepts_enrollments' => true,
+                'image_url' => $c['image_url'],
+            ]));
 
         /* =====================================================
          | ENROLLMENTS
          ===================================================== */
-        $courses->take(2)->each(fn ($course) =>
+        $courses->take(2)->each(
+            fn($course) =>
             Enrollment::create([
                 'course_id' => $course->id,
                 'student_id' => $student->id,
@@ -103,7 +104,6 @@ class CoreDemoSeeder extends Seeder
                 $module = CourseModule::create([
                     'course_id' => $course->id,
                     'title' => "Módulo $i",
-                    'slug' => Str::slug("{$course->title}-modulo-$i-{$course->id}"),
                     'description' => "Conteúdos do módulo $i do curso {$course->title}",
                     'is_public' => true,
                     'is_required' => true,
@@ -163,136 +163,136 @@ class CoreDemoSeeder extends Seeder
                      ------------------------- */
 
                     UnitContent::insert([
-                        ['module_unit_id' => $unit->id, 'content_id' => $text->id,  'order' => 1],
-                        ['module_unit_id' => $unit->id, 'content_id' => $link->id,  'order' => 2],
-                        ['module_unit_id' => $unit->id, 'content_id' => $pdf->id,   'order' => 3],
+                        ['module_unit_id' => $unit->id, 'content_id' => $text->id, 'order' => 1],
+                        ['module_unit_id' => $unit->id, 'content_id' => $link->id, 'order' => 2],
+                        ['module_unit_id' => $unit->id, 'content_id' => $pdf->id, 'order' => 3],
                         ['module_unit_id' => $unit->id, 'content_id' => $video->id, 'order' => 4],
                     ]);
                 }
             }
         });
 
-Tag::insert([
-    // ===== LEVEL =====
-    [
-        'name' => 'Iniciante',
-        'slug' => 'iniciante',
-        'type' => 'level',
-    ],
-    [
-        'name' => 'Intermediário',
-        'slug' => 'intermediario',
-        'type' => 'level',
-    ],
-    [
-        'name' => 'Avançado',
-        'slug' => 'avancado',
-        'type' => 'level',
-    ],
+        Tag::insert([
+            // ===== LEVEL =====
+            [
+                'name' => 'Iniciante',
+                'slug' => 'iniciante',
+                'type' => 'level',
+            ],
+            [
+                'name' => 'Intermediário',
+                'slug' => 'intermediario',
+                'type' => 'level',
+            ],
+            [
+                'name' => 'Avançado',
+                'slug' => 'avancado',
+                'type' => 'level',
+            ],
 
-    // ===== AUDIENCE =====
-    [
-        'name' => 'Estudantes',
-        'slug' => 'estudantes',
-        'type' => 'audience',
-    ],
-    [
-        'name' => 'Profissionais',
-        'slug' => 'profissionais',
-        'type' => 'audience',
-    ],
-    [
-        'name' => 'Iniciantes em Programação',
-        'slug' => 'iniciantes-programacao',
-        'type' => 'audience',
-    ],
+            // ===== AUDIENCE =====
+            [
+                'name' => 'Estudantes',
+                'slug' => 'estudantes',
+                'type' => 'audience',
+            ],
+            [
+                'name' => 'Profissionais',
+                'slug' => 'profissionais',
+                'type' => 'audience',
+            ],
+            [
+                'name' => 'Iniciantes em Programação',
+                'slug' => 'iniciantes-programacao',
+                'type' => 'audience',
+            ],
 
-    // ===== SKILLS =====
-    [
-        'name' => 'Lógica de Programação',
-        'slug' => 'logica-de-programacao',
-        'type' => 'skill',
-    ],
-    [
-        'name' => 'Orientação a Objetos',
-        'slug' => 'orientacao-a-objetos',
-        'type' => 'skill',
-    ],
-    [
-        'name' => 'Desenvolvimento Web',
-        'slug' => 'desenvolvimento-web',
-        'type' => 'skill',
-    ],
-    [
-        'name' => 'Backend',
-        'slug' => 'backend',
-        'type' => 'skill',
-    ],
-    [
-        'name' => 'Frontend',
-        'slug' => 'frontend',
-        'type' => 'skill',
-    ],
+            // ===== SKILLS =====
+            [
+                'name' => 'Lógica de Programação',
+                'slug' => 'logica-de-programacao',
+                'type' => 'skill',
+            ],
+            [
+                'name' => 'Orientação a Objetos',
+                'slug' => 'orientacao-a-objetos',
+                'type' => 'skill',
+            ],
+            [
+                'name' => 'Desenvolvimento Web',
+                'slug' => 'desenvolvimento-web',
+                'type' => 'skill',
+            ],
+            [
+                'name' => 'Backend',
+                'slug' => 'backend',
+                'type' => 'skill',
+            ],
+            [
+                'name' => 'Frontend',
+                'slug' => 'frontend',
+                'type' => 'skill',
+            ],
 
-    // ===== TOOLS =====
-    [
-        'name' => 'PHP',
-        'slug' => 'php',
-        'type' => 'tool',
-    ],
-    [
-        'name' => 'Laravel',
-        'slug' => 'laravel',
-        'type' => 'tool',
-    ],
-    [
-        'name' => 'JavaScript',
-        'slug' => 'javascript',
-        'type' => 'tool',
-    ],
-    [
-        'name' => 'React',
-        'slug' => 'react',
-        'type' => 'tool',
-    ],
-    [
-        'name' => 'Python',
-        'slug' => 'python',
-        'type' => 'tool',
-    ],
-    [
-        'name' => 'Git',
-        'slug' => 'git',
-        'type' => 'tool',
-    ],
+            // ===== TOOLS =====
+            [
+                'name' => 'PHP',
+                'slug' => 'php',
+                'type' => 'tool',
+            ],
+            [
+                'name' => 'Laravel',
+                'slug' => 'laravel',
+                'type' => 'tool',
+            ],
+            [
+                'name' => 'JavaScript',
+                'slug' => 'javascript',
+                'type' => 'tool',
+            ],
+            [
+                'name' => 'React',
+                'slug' => 'react',
+                'type' => 'tool',
+            ],
+            [
+                'name' => 'Python',
+                'slug' => 'python',
+                'type' => 'tool',
+            ],
+            [
+                'name' => 'Git',
+                'slug' => 'git',
+                'type' => 'tool',
+            ],
 
-    // ===== TOPICS =====
-    [
-        'name' => 'Programação',
-        'slug' => 'programacao',
-        'type' => 'topic',
-    ],
-    [
-        'name' => 'Algoritmos',
-        'slug' => 'algoritmos',
-        'type' => 'topic',
-    ],
-    [
-        'name' => 'Estruturas de Dados',
-        'slug' => 'estruturas-de-dados',
-        'type' => 'topic',
-    ],
-    [
-        'name' => 'APIs REST',
-        'slug' => 'apis-rest',
-        'type' => 'topic',
-    ],
-    [
-        'name' => 'Banco de Dados',
-        'slug' => 'banco-de-dados',
-        'type' => 'topic',
-    ],
-]);
+            // ===== TOPICS =====
+            [
+                'name' => 'Programação',
+                'slug' => 'programacao',
+                'type' => 'topic',
+            ],
+            [
+                'name' => 'Algoritmos',
+                'slug' => 'algoritmos',
+                'type' => 'topic',
+            ],
+            [
+                'name' => 'Estruturas de Dados',
+                'slug' => 'estruturas-de-dados',
+                'type' => 'topic',
+            ],
+            [
+                'name' => 'APIs REST',
+                'slug' => 'apis-rest',
+                'type' => 'topic',
+            ],
+            [
+                'name' => 'Banco de Dados',
+                'slug' => 'banco-de-dados',
+                'type' => 'topic',
+            ],
+        ]);
 
 
     }

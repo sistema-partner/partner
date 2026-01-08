@@ -1,190 +1,131 @@
 import React, { useRef, useState } from 'react';
 import { FileUpload } from 'primereact/fileupload';
-import { Tag } from 'primereact/tag';
 import { Button } from 'primereact/button';
-import { ProgressBar } from 'primereact/progressbar';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 
-export default function PrimeImageUpload({ 
-    label, 
-    value, 
-    onChange, 
-    error, 
+export default function PrimeImageUpload({
+    label,
+    value,              // File | null
+    previewUrl = null,  // string | null (ex: courses/abc.png)
+    onChange,
+    error,
     maxFileSize = 2000000,
     accept = "image/*",
     multiple = false
 }) {
     const fileUploadRef = useRef(null);
-    const [totalSize, setTotalSize] = useState(0);
-    const [files, setFiles] = useState(value ? [value] : []);
+    const [files, setFiles] = useState([]);
 
-    const onTemplateSelect = (e) => {
-        let _totalSize = totalSize;
-        let selectedFiles = e.files;
-
-        Object.keys(selectedFiles).forEach((key) => {
-            _totalSize += selectedFiles[key].size || 0;
-        });
-
-        setTotalSize(_totalSize);
-        
-        if (!multiple && selectedFiles.length > 0) {
-            const lastFile = selectedFiles[selectedFiles.length - 1];
-            setFiles([lastFile]);
-            onChange?.(lastFile);
-        } else {
-            setFiles(prev => [...prev, ...selectedFiles]);
-            onChange?.(multiple ? [...files, ...selectedFiles] : selectedFiles[selectedFiles.length - 1]);
+    /**
+     * Resolve qual imagem deve aparecer no preview
+     */
+    const resolvePreview = () => {
+        if (files.length > 0 && files[0].objectURL) {
+            return files[0].objectURL;
         }
+
+        if (previewUrl) {
+            return `/storage/${previewUrl}`;
+        }
+
+        return null;
     };
 
-    const onTemplateRemove = (file, callback) => {
-        const newFiles = files.filter(f => f.name !== file.name);
-        setFiles(newFiles);
-        setTotalSize(totalSize - file.size);
-        onChange?.(multiple ? newFiles : null);
-        callback();
+    /**
+     * Quando o usuário seleciona um arquivo
+     */
+    const onSelect = (e) => {
+        if (!e.files || e.files.length === 0) return;
+
+        const file = e.files[e.files.length - 1];
+
+        setFiles([file]);
+        onChange?.(file);
     };
 
-    const onTemplateClear = () => {
+    /**
+     * Remove imagem selecionada (não apaga no backend)
+     */
+    const clearImage = () => {
         setFiles([]);
-        setTotalSize(0);
-        onChange?.(multiple ? [] : null);
+        onChange?.(null);
     };
 
-    const headerTemplate = (options) => {
-        const { className, chooseButton, uploadButton, cancelButton } = options;
-        const value = totalSize / 10000;
-        const formatedValue = fileUploadRef?.current ? fileUploadRef.current.formatSize(totalSize) : '0 B';
-
-        return (
-            <div className={className} style={{ backgroundColor: 'transparent', display: 'flex', alignItems: 'center' }}>
-                {chooseButton}
-                {uploadButton}
-                {cancelButton}
-                {files.length > 0 && (
-                    <div className="flex align-items-center gap-3 ml-auto">
-                        <span className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-                            {formatedValue} / {(maxFileSize / 1000000).toFixed(0)} MB
-                        </span>
-                        <ProgressBar 
-                            value={value} 
-                            showValue={false} 
-                            style={{ width: '10rem', height: '12px' }}
-                        />
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    const itemTemplate = (file, props) => {
-        return (
-            <div 
-                className="flex align-items-center flex-wrap gap-4 p-3" 
-                style={{ 
-                    borderBottom: '1px solid var(--surface-border)',
-                    backgroundColor: 'var(--surface-card)'
-                }}
-            >
-                <div className="flex align-items-center flex-1 min-w-0">
-                    <img 
-                        alt={file.name} 
-                        role="presentation" 
-                        src={file.objectURL} 
-                        className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex flex-column ml-3">
-                        <span className="font-medium truncate max-w-xs" style={{ color: 'var(--text-color)' }}>
-                            {file.name}
-                        </span>
-                        <small style={{ color: 'var(--text-color-secondary)' }}>
-                            {new Date().toLocaleDateString()}
-                        </small>
-                    </div>
-                </div>
-                <Tag 
-                    value={props.formatSize} 
-                    severity="warning" 
-                    className="px-3 py-2"
-                />
-                <Button 
-                    type="button" 
-                    icon="pi pi-times" 
-                    className="p-button-outlined p-button-rounded p-button-danger"
-                    onClick={() => onTemplateRemove(file, props.onRemove)}
-                />
-            </div>
-        );
-    };
-
+    /**
+     * Template quando não há imagem
+     */
     const emptyTemplate = () => {
+        const preview = resolvePreview();
+
+        if (preview) {
+            return (
+                <div className="relative w-full">
+                    <img
+                        src={preview}
+                        alt="Imagem do curso"
+                        className="w-full h-64 object-cover rounded-lg border"
+                    />
+
+                    <Button
+                        type="button"
+                        icon="pi pi-pencil"
+                        className="p-button-rounded p-button-sm absolute bottom-3 right-3"
+                        onClick={() => fileUploadRef.current?.getInput()?.click()}
+                    />
+                </div>
+            );
+        }
+
         return (
             <div
                 onClick={() => fileUploadRef.current?.getInput()?.click()}
-                className="cursor-pointer flex flex-col items-center justify-center min-h-[200px] p-8 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 transition"
+                className="cursor-pointer flex flex-col items-center justify-center min-h-[220px] p-6 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 transition"
             >
                 <i className="pi pi-image text-5xl mb-4 text-gray-400" />
-
-                <span className="text-lg mb-1 text-gray-600 dark:text-gray-300">
-                    Arraste e solte a imagem aqui
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Clique ou arraste uma imagem
                 </span>
-
-                <span className="text-sm text-gray-500">
-                    ou clique para selecionar
-                </span>
-
-                <span className="text-xs mt-2 text-gray-400">
-                    Máx: {(maxFileSize / 1000000).toFixed(0)}MB
+                <span className="text-xs text-gray-400 mt-1">
+                    Máx {(maxFileSize / 1000000).toFixed(0)}MB
                 </span>
             </div>
         );
     };
 
-    const chooseOptions = { 
-        icon: 'pi pi-fw pi-images', 
-        iconOnly: true, 
-        className: 'custom-choose-btn p-button-rounded p-button-outlined'
-    };
-    
-    const uploadOptions = { 
-        icon: 'pi pi-fw pi-cloud-upload', 
-        iconOnly: true, 
-        className: 'custom-upload-btn p-button-success p-button-rounded p-button-outlined'
-    };
-    
-    const cancelOptions = { 
-        icon: 'pi pi-fw pi-times', 
-        iconOnly: true, 
-        className: 'custom-cancel-btn p-button-danger p-button-rounded p-button-outlined'
-    };
-
     return (
-        <div className="">
+        <div className="space-y-2">
             {label && <InputLabel value={label} />}
-            
+
             <FileUpload
                 ref={fileUploadRef}
                 name="image"
-                url="/api/upload"
-                multiple={multiple}
                 accept={accept}
                 maxFileSize={maxFileSize}
-                onSelect={onTemplateSelect}
-                onClear={onTemplateClear}
-                onRemove={(e) => onTemplateRemove(e.file, e.options.onRemove)}
-                headerTemplate={headerTemplate}
-                itemTemplate={itemTemplate}
+                multiple={multiple}
+                customUpload
+                auto={false}
+                onSelect={onSelect}
+                onClear={clearImage}
                 emptyTemplate={emptyTemplate}
-                chooseOptions={chooseOptions}
-                uploadOptions={uploadOptions}
-                cancelOptions={cancelOptions}
-                customUpload={true}
                 uploadHandler={() => {}}
                 className="w-full"
             />
-            
+
+            {(files.length > 0 || previewUrl) && (
+                <div className="flex justify-end">
+                    <Button
+                        type="button"
+                        icon="pi pi-trash"
+                        label="Remover imagem"
+                        severity="danger"
+                        outlined
+                        size="small"
+                        onClick={clearImage}
+                    />
+                </div>
+            )}
+
             {error && <InputError message={error} />}
         </div>
     );

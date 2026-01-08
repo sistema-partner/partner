@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "@inertiajs/react": "^2.1.6",
+        "lodash.debounce": "^4.0.8",
         "lucide-react": "^0.544.0",
         "primeicons": "^7.0.0",
         "primereact": "^10.9.7",

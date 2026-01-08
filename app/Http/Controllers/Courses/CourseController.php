@@ -10,6 +10,9 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use App\Models\Tag;
+use Illuminate\Support\Facades\DB;
+use App\Models\ModuleUnit;
+use App\Models\CourseModule;
 
 class CourseController extends Controller
 {
@@ -63,7 +66,7 @@ class CourseController extends Controller
     {
         Gate::authorize('update', $course);
         $tags = Tag::orderBy('usage_count', 'desc')
-                ->get(['id', 'name', 'type']);
+            ->get(['id', 'name', 'type']);
 
 
         return Inertia::render('Courses/Teacher/Wizard/About', [
@@ -82,9 +85,10 @@ class CourseController extends Controller
         Gate::authorize('update', $course);
 
         $validated = $request->validate([
-            'title'       => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'image'       => ['nullable', 'image', 'max:2048'],
+            'image' => ['nullable', 'image', 'max:2048'],
+            'tags' => ['nullable', 'array'],
         ]);
 
         if ($request->hasFile('image')) {
@@ -93,6 +97,26 @@ class CourseController extends Controller
         }
 
         $course->update($validated);
+
+        // Sincronizar tags - extrair apenas IDs se forem objetos
+        $tags = $request->input('tags', []);
+        $tagIds = [];
+
+        if (is_array($tags)) {
+            foreach ($tags as $tag) {
+                if (is_array($tag) && isset($tag['id'])) {
+                    $tagIds[] = $tag['id'];
+                } elseif (is_numeric($tag)) {
+                    $tagIds[] = $tag;
+                }
+            }
+        }
+
+        if (!empty($tagIds)) {
+            $course->tags()->sync($tagIds);
+        } else {
+            $course->tags()->detach();
+        }
 
         return redirect()
             ->route('teacher.courses.settings', $course)
@@ -118,23 +142,96 @@ class CourseController extends Controller
             ->with('success', 'Configurações salvas');
     }
 
-
-    public function update(Request $request, Course $course)
+    public function updateCurriculum(Request $request, Course $course)
     {
         Gate::authorize('update', $course);
 
-        $step = $request->input('step');
+        $data = $request->validate([
+            'modules' => 'required|array',
+            'modules.*.id' => 'nullable|integer',
+            'modules.*.title' => 'required|string|max:255',
+            'modules.*.description' => 'nullable|string',
+            'modules.*.order' => 'required|integer',
 
-        switch ($step) {
-            case 'about':
-                return $this->updateAbout($request, $course);
+            'modules.*.units' => 'array',
+            'modules.*.units.*.id' => 'nullable|integer',
+            'modules.*.units.*.title' => 'required|string|max:255',
+            'modules.*.units.*.type' => 'required|in:lesson,quiz,project,code_exercise',
+            'modules.*.units.*.order' => 'required|integer',
+            'modules.*.units.*.is_optional' => 'boolean',
+        ]);
 
-            case 'settings':
-                return $this->updateSettings($request, $course);
+        DB::transaction(function () use ($data, $course) {
+            $moduleIds = [];
 
-            default:
-                abort(400, 'Invalid step');
-        }
+            foreach ($data['modules'] as $moduleData) {
+                // Valida se o módulo pertence ao curso
+                if (!empty($moduleData['id'])) {
+                    $existingModule = CourseModule::where('id', $moduleData['id'])
+                        ->where('course_id', $course->id)
+                        ->first();
+
+                    if (!$existingModule) {
+                        abort(403, 'Unauthorized module');
+                    }
+                }
+
+                $module = CourseModule::updateOrCreate(
+                    [
+                        'id' => $moduleData['id'] ?? null,
+                    ],
+                    [
+                        'course_id' => $course->id,
+                        'title' => $moduleData['title'],
+                        'description' => $moduleData['description'] ?? null,
+                    ]
+                );
+
+                $moduleIds[] = $module->id;
+
+                $unitIds = [];
+
+                foreach ($moduleData['units'] ?? [] as $unitData) {
+                    // Valida se a unidade pertence ao módulo
+                    if (!empty($unitData['id'])) {
+                        $existingUnit = ModuleUnit::where('id', $unitData['id'])
+                            ->where('course_module_id', $module->id)
+                            ->first();
+
+                        if (!$existingUnit) {
+                            abort(403, 'Unauthorized unit');
+                        }
+                    }
+
+                    $unit = ModuleUnit::updateOrCreate(
+                        [
+                            'id' => $unitData['id'] ?? null,
+                        ],
+                        [
+                            'course_module_id' => $module->id,
+                            'title' => $unitData['title'],
+                            'type' => $unitData['type'],
+                            'order' => $unitData['order'],
+                            'is_optional' => $unitData['is_optional'] ?? false,
+                        ]
+                    );
+
+                    $unitIds[] = $unit->id;
+                }
+
+                // remove units deletadas
+                ModuleUnit::where('course_module_id', $module->id)
+                    ->whereNotIn('id', $unitIds)
+                    ->delete();
+            }
+
+            // remove modules deletados
+            CourseModule::where('course_id', $course->id)
+                ->whereNotIn('id', $moduleIds)
+                ->delete();
+        });
+
+        return back();
     }
 
 
@@ -153,6 +250,45 @@ class CourseController extends Controller
                 'start_date' => optional($course->start_date)->format('Y-m-d'),
                 'end_date' => optional($course->end_date)->format('Y-m-d'),
             ],
+        ]);
+    }
+
+    public function curriculum(Course $course)
+    {
+        Gate::authorize('update', $course);
+        $tags = Tag::orderBy('usage_count', 'desc')
+            ->get(['id', 'name', 'type']);
+
+        $modules = $course->modules()
+            ->with('units')
+            ->orderBy('order')
+            ->get()
+            ->map(fn($module) => [
+                'id' => $module->id,
+                'title' => $module->title,
+                'description' => $module->description,
+                'order' => $module->order,
+                'units' => $module->units->map(fn($unit) => [
+                    'id' => $unit->id,
+                    'title' => $unit->title,
+                    'type' => $unit->type,
+                    'order' => $unit->order,
+                    'is_optional' => $unit->is_optional,
+                ])->toArray(),
+            ])
+            ->toArray();
+
+        return Inertia::render('Courses/Teacher/Wizard/Curriculum', [
+            'course' => array_merge(
+                $course->only([
+                    'id',
+                    'title',
+                    'description',
+                    'image_url',
+                ]),
+                ['modules' => $modules]
+            ),
+            'tags' => $tags
         ]);
     }
 

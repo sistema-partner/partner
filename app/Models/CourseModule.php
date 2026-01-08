@@ -29,7 +29,7 @@ class CourseModule extends Model
     public function contents(): BelongsToMany
     {
         // Pivot table columns are module_id & content_id (not course_module_id)
-        return $this->belongsToMany(Content::class, 'module_content', 'module_id', 'content_id')
+        return $this->belongsToMany(Content::class, 'module_content', 'course_module_id', 'content_id')
             ->withPivot('order')
             ->withTimestamps()
             ->orderBy('order');
@@ -37,7 +37,7 @@ class CourseModule extends Model
 
     public function moduleContents()
     {
-        return $this->hasMany(ModuleContent::class, 'module_id')->orderBy('order');
+        return $this->hasMany(ModuleContent::class, 'course_module_id')->orderBy('order');
     }
 
     public function publishedContents()

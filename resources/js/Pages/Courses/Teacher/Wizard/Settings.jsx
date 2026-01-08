@@ -11,7 +11,6 @@ import { Divider } from "primereact/divider";
 
 export default function Settings({ auth, course }) {
     const { data, setData, post, processing, errors } = useForm({
-        step: "settings",
         status: course.status,
         visibility: course.visibility,
         enrollment_policy: course.enrollment_policy,
@@ -24,7 +23,7 @@ export default function Settings({ auth, course }) {
     function submit(e) {
         e.preventDefault();
 
-        post(route("teacher.courses.update", course.id), {
+        post(route("teacher.courses.settings.update", course.id), {
             _method: "put",
         });
     }

@@ -26,7 +26,7 @@ class ModuleUnit extends Model
 
     public function module()
     {
-        return $this->belongsTo(CourseModule::class, 'module_id');
+        return $this->belongsTo(CourseModule::class, 'course_module_id');
     }
 
     public function contents()
