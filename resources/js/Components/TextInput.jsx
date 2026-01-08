@@ -45,6 +45,7 @@ export default forwardRef(function TextInput(
     }, [isFocused]);
 
     const baseClasses = [
+        'rounded-lg',
         'w-full',
         'bg-light-card dark:bg-dark-card',
         'text-light-foreground dark:text-dark-foreground',
